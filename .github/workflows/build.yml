@@ -44,8 +44,8 @@ jobs:
               run: |
                   PLUGIN_COUNT=$(find src/plugins -maxdepth 1 -mindepth 1 -type d ! -name "_core" ! -name "_api" | wc -l)
                   sed -i "s/[0-9]\+\++ built in plugins/${PLUGIN_COUNT}+ built in plugins/" README.md
-                  git config --global user.name "GitHub-Actions"
-                  git config --global user.email "actions@github.com"
+                  git config --global user.name "${{ github.actor }}"
+                  git config --global user.email "${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com"
                   git diff --quiet README.md || (git add README.md && git commit --amend --no-edit && git push --force)
 
             - name: Clean up obsolete files
