@@ -37,7 +37,7 @@ interface BanModalProps extends ModalPropsRender {
 }
 
 function ReasonsComponent() {
-    const { reasons } = settings.store;
+    const { reasons } = settings.use(["reasons"]);
 
     return (
         <div>
@@ -53,8 +53,9 @@ function ReasonsComponent() {
                         }}
                         trailing={{
                             type: "icon",
-                            tooltip: "Remove",
-                            icon: () => <Icons.TrashIcon color="var(--icon-feedback-critical)" size="sm" />,
+                            tooltip: getIntlMessage("REMOVE"),
+                            disabled: reasons.length <= 1,
+                            icon: () => <Icons.TrashIcon color={reasons.length <= 1 ? "var(--icon-muted)" : "var(--icon-feedback-critical)"} size="sm" />,
                             onClick: () => {
                                 const list = [...reasons];
                                 list.splice(i, 1);
@@ -66,15 +67,14 @@ function ReasonsComponent() {
             ))}
 
             <Buttons.Button
-                text="Add another reason"
+                text="Add Reason"
                 variant="secondary"
                 size="sm"
                 icon={() => <Icons.PlusSmallIcon />}
                 onClick={() => {
-                    const newList = [...reasons, ""];
-                    settings.store.reasons = newList;
+                    settings.store.reasons = [...reasons, ""];
                 }}
-            />;
+            />
         </div>
     );
 }
@@ -161,8 +161,8 @@ function BanModalComponent({ guild, user, ban, ...modalProps }: BanModalProps) {
 
                 <Forms.FormSection className={Margins.top16} tag="h4" title="User Info">
                     <Paragraph selectable variant="text-xs/normal" color="text-muted">User ID: {user.id}</Paragraph>
-                    {user.globalName && <Paragraph selectable variant="text-xs/normal" color="text-muted">Display Name: {user.globalName}</Paragraph>}
-                    <Paragraph selectable variant="text-xs/normal" color="text-muted">Account Created: {DateUtils.calendarFormat(user.createdAt)}</Paragraph>
+                    {user.globalName && <Paragraph selectable variant="text-xs/normal" color="text-muted">{getIntlMessage("DISPLAY_NAME")}: {user.globalName}</Paragraph>}
+                    <Paragraph selectable variant="text-xs/normal" color="text-muted">{getIntlMessage("USER_PROFILE_DISCORD_MEMBER_SINCE")}: {DateUtils.calendarFormat(user.createdAt)}</Paragraph>
 
                     {error && <HelpMessage className={Margins.top8} messageType="danger">{error}</HelpMessage>}
                 </Forms.FormSection>

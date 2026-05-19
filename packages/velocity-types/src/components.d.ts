@@ -161,8 +161,6 @@ export type Field = ComponentType<PropsWithChildren<{
     /** Use `"group"` for generic groups, `"radiogroup"` for radio button groups — causes the root element to render as a `<fieldset>` instead of a `<div>` */
     role?: "group" | "radiogroup" | string;
     ref?: Ref<HTMLDivElement | HTMLFieldSetElement>;
-    className?: string;
-    style?: CSSProperties;
     "aria-describedby"?: string;
     children?: ReactNode | ((context: {
         labelId: string;
@@ -390,7 +388,8 @@ export type TextInput = ComponentType<PropsWithChildren<{
     } | {
         type?: "icon";
         icon: ComponentType<any>;
-        onClick?: (e: MouseEvent) => void;
+        disabled?: boolean;
+        onClick?: (e: UIEvent) => void;
         "aria-label"?: string;
         tooltip?: string;
     } | {

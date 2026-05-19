@@ -81,7 +81,7 @@ const BuiltInSwitch = ({ checked, onChange, disabled }: SwitchProps) => (
 );
 
 export function Switch({ checked, onChange, disabled, title, description }: SwitchProps) {
-    const { velocityStyles } = useSettings(["velocityStyles.*"]);
+    const { velocityStyles } = useSettings(["velocityStyles.switchRedesign"]);
 
     if (velocityStyles.switchRedesign === "legacy")
         return <LegacySwitch checked={checked} onChange={onChange} disabled={disabled} />;
