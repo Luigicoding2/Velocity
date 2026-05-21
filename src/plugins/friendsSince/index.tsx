@@ -37,8 +37,8 @@ export default definePlugin({
     patches: [
         // DM User Sidebar
         {
-            find: "#{intl::PREMIUM_GIFTING_BUTTON}),action:",
-            noWarn: true,
+            find: "#{intl::USER_PROFILE_BIO}),headingColor",
+            lazy: true,
             replacement: {
                 match: /#{intl::USER_PROFILE_MEMBER_SINCE}\),.{0,100}userId:(\i\.id)}\)}\)/,
                 replace: "$&,$self.FriendsSinceComponent({userId:$1,isSidebar:true})"
