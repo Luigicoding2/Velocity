@@ -33,9 +33,9 @@ import BadgeAPI from "@plugins/_api/badges";
 import SettingsPlugin from "@plugins/_core/settings";
 import { gitRemote } from "@shared/userAgent";
 import { ChangeList } from "@utils/ChangeList";
-import { Devs, DONOR_ROLE_ID, IS_MAC, IS_WINDOWS, VELOCITY_GUILD_ID } from "@utils/constants";
+import { DONOR_ROLE_ID, IS_MAC, IS_WINDOWS, VELOCITY_GUILD_ID, VELOCITY_GUILD_INVITE } from "@utils/constants";
 import { classNameFactory } from "@utils/css";
-import { isReducedMotionEnabled } from "@utils/discord";
+import { isReducedMotionEnabled, openInviteModal } from "@utils/discord";
 import { classes, identity, shouldShowContributorBadge } from "@utils/misc";
 import { relaunch } from "@utils/native";
 import { useCleanupEffect } from "@utils/react";
@@ -47,10 +47,6 @@ import { MacOSVibrancySettings } from "./MacVibrancySettings";
 import { NotificationSection } from "./NotificationSettings";
 
 const cl = classNameFactory("vc-settings-velocity-");
-
-type KeysOfType<Object, Type> = {
-    [K in keyof Object]: Object[K] extends Type ? K : never;
-}[keyof Object];
 
 const isDonor = (userId: string) => !!(
     (BadgeAPI.getDonorBadges(userId)?.length ?? 0) > 0
@@ -327,7 +323,16 @@ export default function VelocitySettings() {
                     <Badge
                         icon={Icons.SparklesIcon}
                         title="Donations"
-                        description={`You can manage your perks at any time by messaging @${Devs.RoScripter999.name}`}
+                        description={
+                            <>
+                                You can manage your perks at any time by opening a modmail ticket in our{" "}
+                                <Buttons.TextButton
+                                    text="support server"
+                                    textVariant="text-sm/semibold"
+                                    onClick={() => openInviteModal(VELOCITY_GUILD_INVITE)}
+                                />
+                            </>
+                        }
                     />
                 </div>
             )}
