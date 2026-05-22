@@ -24,13 +24,13 @@ import { classNameFactory } from "@utils/css";
 import { wordsToTitle } from "@utils/text";
 import type { ModalPropsRender } from "@velocity-types";
 import { Avatar, Forms, Icons, IconUtils, Modal, Text, UserStore } from "@webpack/common";
-import type { JSX } from "react";
+import type { JSX, ReactNode } from "react";
 
 import type { BadgeUserArgs, ProfileBadge } from ".";
 
 const cl = classNameFactory("vc-badge-");
 
-export function Badge({ icon: Icon, title, description, tooltip, onClick }: { icon: JSX.ElementType; title: string; description: string; tooltip?: string; onClick?: () => void; }) {
+export function Badge({ icon: Icon, title, description, tooltip, onClick }: { icon: JSX.ElementType; title: string; description: ReactNode; tooltip?: string; onClick?: () => void; }) {
     return (
         <div className={cl("badge")} onClick={onClick}>
             <SectionHeader
