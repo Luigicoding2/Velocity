@@ -1,4 +1,4 @@
-import type { ButtonVariant, Channel, Guild, GuildMember, Message, MessageAttachment, Poll, User, PostPayloads } from ".";
+import type { ButtonVariant, Channel, Guild, GuildMember, Message, MessageAttachment, Poll, User, PostPayloads, GetPayloads } from ".";
 import type { ReactNode } from "react";
 import type { LiteralUnion } from "type-fest";
 
@@ -108,7 +108,15 @@ export interface RestRequestData<TUrl extends string = string> {
 // TODO Make this better somehow
 type RestRequestDataType<TUrl extends string> = TUrl extends PostPayloads["url"] ? Extract<PostPayloads, { url: TUrl; }> : RestRequestData<TUrl> & { body?: unknown; };
 
-export type RestAPI = Record<'post' | 'patch' | 'get' | 'put' | 'del', <TUrl extends PostPayloads["url"] | (string & {}) >(data: RestRequestDataType<TUrl>) => Promise<any>>;
+type ResponseData<TBody = any> =
+    | { ok: true; body: TBody; headers: any; retryAfter?: number; status: number; text: string; }
+    | { ok: false; body: { code: number; message: string; }; headers: any; retryAfter?: number; status: number; text: string; };
+
+
+export type RestAPI = Record<'post' | 'patch' | 'put' | 'del', <TUrl extends PostPayloads["url"] | (string & {}) >(data: RestRequestDataType<TUrl>) => Promise<ResponseData>> & {
+    // guh
+    get: <TUrl extends PostPayloads["url"] | (string & {}) >(data: RestRequestData<TUrl>) => Promise<ResponseData<GetPayloads<TUrl>>>;
+};
 
 export type Permissions = "CREATE_INSTANT_INVITE"
     | "KICK_MEMBERS"
