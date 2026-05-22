@@ -100,6 +100,10 @@ export type ChatBarButtonData = {
      * and it can be different from this one.
      */
     icon: IconComponent;
+    /**
+     * Only set to true only if this button is strictly critical for your plugin,
+     * Do not set this to true if the feature or method can be accessed via alternative ways (e.g., settings, commands, menus).
+     */
     required?: boolean;
 };
 
@@ -199,7 +203,7 @@ export const ChatBarButton = ErrorBoundary.wrap((props: ChatBarButtonProps) => {
 addContextMenuPatch("textarea-context", (children, args) => {
     const { chatBarButtons } = useSettings(["uiElements.chatBarButtons.*"]).uiElements;
 
-    const buttons = Array.from(ChatBarButtonMap.entries());
+    const buttons = Array.from(ChatBarButtonMap.entries()).filter(([, data]) => !data.required);
     if (!buttons.length) return;
 
     const group = findGroupChildrenByChildId("submit-button", children);

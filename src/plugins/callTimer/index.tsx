@@ -17,10 +17,8 @@
 */
 
 import { get, set } from "@api/DataStore";
-import { showNotification } from "@api/Notifications";
 import { definePluginSettings } from "@api/Settings";
 import ErrorBoundary from "@components/ErrorBoundary";
-import { openPluginModal } from "@components/settings/tabs/plugins/PluginModal";
 import { Devs } from "@utils/constants";
 import { useTimer } from "@utils/react";
 import { formatDuration } from "@utils/text";
@@ -34,15 +32,8 @@ const settings = definePluginSettings({
         type: OptionType.SELECT,
         description: "The timer format. This can be any valid moment.js format",
         options: [
-            {
-                label: "30d 23:00:42s",
-                value: "regular",
-                default: true
-            },
-            {
-                label: "30d 23h 00m 42s",
-                value: "stopwatch"
-            }
+            { label: "30d 23:00:42s", value: "regular", default: true },
+            { label: "30d 23h 00m 42s", value: "stopwatch" }
         ]
     },
     saveTimer: {
@@ -50,69 +41,38 @@ const settings = definePluginSettings({
         description: "Save timer progress across sessions",
         default: false,
         onChange(newValue: boolean) {
-            const inCall = Object.keys(SelectedChannelStore.getVoiceChannelId?.() || {}).length > 0;
-
-            if (!newValue && inCall) {
-                showNotification({
-                    title: "Call Timer",
-                    body: "Timer saving disabled. Your timer progress will no longer be saved.",
-                    color: "var(--status-danger)",
-                    onClick: () => openPluginModal(Velocity.Plugins.plugins.CallTimer)
-                });
-            } else if (newValue && inCall) {
-                Toasts.show({
-                    message: "Rejoin the call for timer saving to take effect",
-                    id: Toasts.genId(),
-                    type: Toasts.Type.MESSAGE,
-                    options: {
-                        duration: 5000,
-                        position: Toasts.Position.BOTTOM
-                    }
-                });
-            }
+            if (!SelectedChannelStore.getVoiceChannelId?.()) return;
+            Toasts.show({
+                message: newValue
+                    ? "Rejoin the call for timer saving to take effect"
+                    : "Timer saving disabled",
+                id: Toasts.genId(),
+                type: Toasts.Type.MESSAGE,
+                options: { duration: 5000, position: Toasts.Position.BOTTOM }
+            });
         }
     }
 });
 
-const timerData = new Map<string, Map<string, number>>();
-
-const getKey = (userId: string) => `CallTimer_${userId}`;
+const timerData = new Map<string, number>();
 
 async function loadTimerData(userId: string) {
-    const data = await get(getKey(userId));
-    if (data) {
-        timerData.set(userId, data);
-    } else {
-        timerData.set(userId, new Map());
-    }
+    const saved = await get<Map<string, number>>(`CallTimer_${userId}`);
+    if (saved) for (const [k, v] of saved) timerData.set(k, v);
 }
 
 async function saveTimerData(userId: string) {
-    await set(getKey(userId), timerData.get(userId));
-}
-
-function getTimerValue(userId: string, channelId: string): number {
-    return timerData.get(userId)?.get(channelId) ?? 0;
-}
-
-function setTimerValue(userId: string, channelId: string, time: number) {
-    if (!timerData.has(userId)) {
-        timerData.set(userId, new Map());
-    }
-    timerData.get(userId)!.set(channelId, time);
+    await set(`CallTimer_${userId}`, timerData);
 }
 
 export default definePlugin({
     name: "CallTimer",
-    description: "Adds a timer to vcs",
+    description: "Adds a timer to voice calls",
     tags: ["Voice", "Utility"],
     authors: [Devs.Ven, Devs.RoScripter999],
     settings,
 
     managedStyle: alignedChatInputFix,
-
-    startTime: 0,
-    interval: void 0 as NodeJS.Timeout | undefined,
 
     patches: [{
         find: "renderConnectionStatus(){",
@@ -122,7 +82,7 @@ export default definePlugin({
         }
     }],
 
-    renderTimer(channelId: string) {
+    renderTimer({ channelId }: { channelId: string; }) {
         return <ErrorBoundary noop>
             <this.Timer channelId={channelId} />
         </ErrorBoundary>;
@@ -134,38 +94,33 @@ export default definePlugin({
         const totalTimeRef = useRef(0);
 
         useEffect(() => {
-            if (settings.store.saveTimer && userId) {
-                loadTimerData(userId).then(() => {
-                    const saved = getTimerValue(userId, channelId);
-                    if (saved > 0) {
-                        setBaseTime(saved);
-                    }
-                });
-            }
+            if (!settings.store.saveTimer || !userId) return;
+            loadTimerData(userId).then(() => {
+                const saved = timerData.get(channelId) ?? 0;
+                if (saved > 0) setBaseTime(saved);
+            });
         }, [channelId, userId]);
 
-        const time = useTimer({
-            deps: [channelId]
-        });
-
-        const totalTime = time + baseTime;
-        totalTimeRef.current = totalTime;
+        const time = useTimer({ deps: [channelId] });
+        totalTimeRef.current = time + baseTime;
 
         useEffect(() => {
             if (!settings.store.saveTimer || !userId) return;
 
-            const saveInterval = setInterval(() => {
-                setTimerValue(userId, channelId, totalTimeRef.current);
+            const interval = setInterval(() => {
+                timerData.set(channelId, totalTimeRef.current);
                 saveTimerData(userId);
             }, 5000);
 
             return () => {
-                clearInterval(saveInterval);
-                setTimerValue(userId, channelId, totalTimeRef.current);
+                clearInterval(interval);
+                timerData.set(channelId, totalTimeRef.current);
                 saveTimerData(userId);
             };
         }, [userId, channelId]);
 
-        return <p style={{ margin: 0, fontFamily: "var(--font-code)" }}>{formatDuration(Math.floor(totalTime / 1000), "seconds", true, settings.store.format as any)}</p>;
+        return <p style={{ margin: 0, fontFamily: "var(--font-code)" }}>
+            {formatDuration(Math.floor(totalTimeRef.current / 1000), "seconds", true, settings.store.format as "regular" | "stopwatch")}
+        </p>;
     }
 });

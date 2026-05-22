@@ -39,26 +39,31 @@ import { makeCodeblock } from "@utils/text";
 import definePlugin, { type Plugin } from "@utils/types";
 import { checkForUpdates, isOutdated, update } from "@utils/updater";
 import type { Channel, ModalPropsRender } from "@velocity-types";
-import { CloudUploadPlatform } from "@velocity-types/enums";
+import { CloudUploadPlatform, MessageFlags } from "@velocity-types/enums";
 import { Alerts, Buttons, ChannelStore, CloudUploader, ConfirmModal, Constants, GuildMemberStore, Icons, openModal, Parser, PermissionsBits, PermissionStore, RelationshipStore, RestAPI, SelectedChannelStore, showToast, SnowflakeUtils, Text, Toasts, useEffect, UserStore, useState } from "@webpack/common";
 import type { JSX } from "react";
 
 import gitHash from "~git-hash";
 import plugins, { PluginMeta } from "~plugins";
 
+const logger = new Logger("SupportHelper");
+
 const AdditionalAllowedChannelIds = [
     "1024286218801926184" // Velocity > #bot-spam
 ];
 
 const TrustedRolesIds = [
-    CONTRIB_ROLE_ID, // contributor
-    REGULAR_ROLE_ID, // regular
-    DONOR_ROLE_ID // donor
+    CONTRIB_ROLE_ID,
+    REGULAR_ROLE_ID,
+    DONOR_ROLE_ID
 ];
+
+const pluginLinkRegex = /velocity:\/\/plugins\/([a-zA-Z0-9_-]+)/;
 
 const ShowCurrentGame = getUserSettingLazy<boolean>("status", "showCurrentGame")!;
 
-const isSupportAllowedChannel = (channel: Channel) => channel.parent_id === SUPPORT_CATEGORY_ID || AdditionalAllowedChannelIds.includes(channel.id);
+const isSupportAllowedChannel = (channel: Channel) =>
+    channel.parent_id === SUPPORT_CATEGORY_ID || AdditionalAllowedChannelIds.includes(channel.id);
 
 async function forceUpdate() {
     const outdated = await checkForUpdates();
@@ -66,7 +71,6 @@ async function forceUpdate() {
         await update();
         relaunch();
     }
-
     return outdated;
 }
 
@@ -75,7 +79,6 @@ async function generateDebugInfoMessage() {
 
     const client = (() => {
         if (IS_DISCORD_DESKTOP) return `Discord Desktop v${DiscordNative.app.getVersion()}`;
-
         // @ts-expect-error
         const name = typeof unsafeWindow !== "undefined" ? "UserScript" : "Web";
         return `${name} (${navigator.userAgent})`;
@@ -102,12 +105,12 @@ async function generateDebugInfoMessage() {
 
     let content = `>>> ${Object.entries(info).map(([k, v]) => `**${k}**: ${v}`).join("\n")}`;
     content += "\n" + Object.entries(commonIssues)
-        .filter(([, v]) => v).map(([k]) => `⚠️ ${k}`)
+        .filter(([, v]) => v)
+        .map(([k]) => `⚠️ ${k}`)
         .join("\n");
 
     return content.trim();
 }
-
 
 async function uploadPluginListFile(channelId: string, fileContent: string, filename: string) {
     const file = new File([fileContent], filename, { type: "text/plain" });
@@ -124,30 +127,24 @@ async function uploadPluginListFile(channelId: string, fileContent: string, file
                     nonce: SnowflakeUtils.fromTimestamp(Date.now()),
                     sticker_ids: [],
                     type: 0,
-                    attachments: [{
-                        id: "0",
-                        filename: upload.filename,
-                        uploaded_filename: upload.uploadedFilename
-                    }]
+                    attachments: [{ id: "0", filename: upload.filename, uploaded_filename: upload.uploadedFilename }]
                 }
             }).then(() => resolve()).catch(reject);
         });
 
         upload.on("error", () => reject(new Error("Failed to upload file")));
-
         upload.upload();
     });
 }
 
-function generatePluginList() {
+type PluginList = string | { fileContent: string; filename: string; };
+
+function generatePluginList(): PluginList {
     const isApiPlugin = (plugin: string) => plugin.endsWith("API") || plugins[plugin].required;
 
-    const enabledPlugins = Object.keys(plugins)
-        .filter(p => isPluginEnabled(p) && !isApiPlugin(p));
-
+    const enabledPlugins = Object.keys(plugins).filter(p => isPluginEnabled(p) && !isApiPlugin(p));
     const enabledStockPlugins = enabledPlugins.filter(p => !PluginMeta[p].userPlugin).sort();
     const enabledUserPlugins = enabledPlugins.filter(p => PluginMeta[p].userPlugin).sort();
-
     const user = UserStore.getCurrentUser();
 
     if (enabledPlugins.length > 100 && !isPluginDev(user.id)) {
@@ -165,40 +162,47 @@ function generatePluginList() {
             </div>
         });
 
-        const fileContent = [
+        const lines = [
             `Enabled Stock Plugins (${enabledStockPlugins.length}):`,
             ...enabledStockPlugins.map(p => `  - ${p}`),
             ""
         ];
 
         if (enabledUserPlugins.length) {
-            fileContent.push(
+            lines.push(
                 `Enabled User Plugins (${enabledUserPlugins.length}):`,
                 ...enabledUserPlugins.map(p => `  - ${p}`),
                 ""
             );
         }
 
-        fileContent.push(
-            "---",
-            `Total Enabled Plugins: ${enabledPlugins.length}`,
-            "Warning: Due to the high number of enabled plugins, support may be limited."
-        );
+        lines.push("---", `Total Enabled Plugins: ${enabledPlugins.length}`);
 
-        return {
-            uploadFile: true,
-            fileContent: fileContent.join("\n"),
-            filename: `${user.username}-plugins.txt`
-        };
+        return { fileContent: lines.join("\n"), filename: `${user.username}-plugins.txt` };
     }
 
     let content = `**Enabled Plugins (${enabledStockPlugins.length}):**\n${makeCodeblock(enabledStockPlugins.join(", "))}`;
-
-    if (enabledUserPlugins.length) {
+    if (enabledUserPlugins.length)
         content += `**Enabled UserPlugins (${enabledUserPlugins.length}):**\n${makeCodeblock(enabledUserPlugins.join(", "))}`;
-    }
 
     return content;
+}
+
+async function sendPluginList(channelId: string) {
+    const pluginList = generatePluginList();
+
+    if (typeof pluginList === "string") {
+        sendMessage(channelId, { content: pluginList });
+        return;
+    }
+
+    try {
+        await uploadPluginListFile(channelId, pluginList.fileContent, pluginList.filename);
+        showToast("Plugin list uploaded successfully!", Toasts.Type.SUCCESS);
+    } catch (e) {
+        logger.error("Failed to upload plugin list:", e);
+        showToast("Failed to upload plugin list", Toasts.Type.FAILURE);
+    }
 }
 
 const checkForUpdatesOnce = onlyOnce(checkForUpdates);
@@ -223,11 +227,7 @@ function DevBuildConfirmModal(props: ModalPropsRender) {
         >
             <div>
                 <Paragraph>You are using a custom build of Velocity, which we do not provide support for!</Paragraph>
-
-                <Paragraph className={Margins.top8}>
-                    We only provide support for official builds
-                </Paragraph>
-
+                <Paragraph className={Margins.top8}>We only provide support for official builds</Paragraph>
                 <Text variant="text-md/bold" className={Margins.top8}>You will be banned from receiving support if you ignore this rule.</Text>
             </div>
         </ConfirmModal>
@@ -263,21 +263,16 @@ export default definePlugin({
             description: "Send Velocity plugin list",
             predicate: ctx => isPluginDev(UserStore.getCurrentUser()?.id) || isSupportAllowedChannel(ctx.channel),
             execute: async () => {
-                const channelId = SelectedChannelStore.getChannelId();
                 const pluginList = generatePluginList();
+                if (typeof pluginList === "string") return { content: pluginList };
 
-                if (typeof pluginList === "string") {
-                    return { content: pluginList };
-                } else if (pluginList && typeof pluginList === "object" && pluginList.uploadFile) {
-                    try {
-                        await uploadPluginListFile(channelId, pluginList.fileContent, pluginList.filename);
-                        return { content: "" }; // Empty return since file was already sent
-                    } catch (e) {
-                        new Logger("SupportHelper").error("Failed to upload plugin list:", e);
-                        return { content: "Failed to upload plugin list file. Please try again." };
-                    }
+                try {
+                    await uploadPluginListFile(SelectedChannelStore.getChannelId(), pluginList.fileContent, pluginList.filename);
+                    return { content: "" };
+                } catch (e) {
+                    logger.error("Failed to upload plugin list:", e);
+                    return { content: "Failed to upload plugin list file. Please try again." };
                 }
-                return { content: "Unable to generate plugin list." };
             }
         }
     ],
@@ -291,7 +286,7 @@ export default definePlugin({
             if (!selfId || isPluginDev(selfId)) return;
 
             if (!IS_UPDATER_DISABLED) {
-                await checkForUpdatesOnce().catch(() => { });
+                await checkForUpdatesOnce().catch(() => {});
 
                 if (isOutdated) {
                     openModal(props => (
@@ -305,12 +300,8 @@ export default definePlugin({
                         >
                             <div>
                                 <Paragraph>You are using an outdated version of Velocity! Chances are, your issue is already fixed.</Paragraph>
-                                <Paragraph className={Margins.top8}>
-                                    Please first update before asking for support!
-                                </Paragraph>
-                                <Paragraph className={Margins.top8}>
-                                    If you know what you're doing or cannot update, you can dismiss this prompt.
-                                </Paragraph>
+                                <Paragraph className={Margins.top8}>Please first update before asking for support!</Paragraph>
+                                <Paragraph className={Margins.top8}>If you know what you're doing or cannot update, you can dismiss this prompt.</Paragraph>
                             </div>
                         </ConfirmModal>
                     ));
@@ -323,17 +314,11 @@ export default definePlugin({
 
             if (!IS_WEB && IS_UPDATER_DISABLED) {
                 openModal(props => (
-                    <ConfirmModal
-                        {...props}
-                        title="Hold on!"
-                        confirmText="OK"
-                        variant="primary"
-                    >
+                    <ConfirmModal {...props} title="Hold on!" confirmText="OK" variant="primary">
                         <div>
                             <Paragraph>You are using an externally updated Velocity version, which we do not provide support for!</Paragraph>
                             <Paragraph className={Margins.top8}>
-                                Please either switch to an officially supported version of Velocity, or
-                                contact your package maintainer for support instead.
+                                Please either switch to an officially supported version of Velocity, or contact your package maintainer for support instead.
                             </Paragraph>
                         </div>
                     </ConfirmModal>
@@ -341,35 +326,22 @@ export default definePlugin({
                 return;
             }
 
-            if (!IS_STANDALONE && !settings.store.dismissedDevBuildWarning) {
+            if (!IS_STANDALONE && !settings.store.dismissedDevBuildWarning)
                 openModal(props => <DevBuildConfirmModal {...props} />);
-                return;
-            }
         }
     },
 
     renderMessageAccessory(props) {
-        const buttons = [] as JSX.Element[];
-
+        const match = props.message.content.match(pluginLinkRegex);
+        const hasDebugCommand = props.message.content.includes("/velocity-debug") || props.message.content.includes("/velocity-plugins");
         const shouldAddUpdateButton =
-            !IS_UPDATER_DISABLED
-            && (
-                (props.channel.id === KNOWN_ISSUES_CHANNEL_ID) ||
-                (props.channel.parent_id === SUPPORT_CATEGORY_ID && props.message.author.id === VEBOT_USER_ID)
-            )
-            && props.message.content?.includes("update");
-
-        const linkRegex = /velocity:\/\/plugins\/([a-zA-Z0-9_-]+)/;
-        const match = props.message.content.match(linkRegex);
-
-        if (!match) {
-            if (!shouldAddUpdateButton && !props.message.content.includes("/velocity-debug") && !props.message.content.includes("/velocity-plugins")) {
-                return null;
-            }
-        }
+            !IS_UPDATER_DISABLED &&
+            (props.channel.id === KNOWN_ISSUES_CHANNEL_ID || (props.channel.parent_id === SUPPORT_CATEGORY_ID && props.message.author.id === VEBOT_USER_ID)) &&
+            props.message.content?.includes("update") &&
+            props.message.flags !== MessageFlags.EPHEMERAL;
 
         const plugin = match ? Object.values(plugins).find(p => p.name.toLowerCase() === match[1].toLowerCase()) as Plugin : null;
-        const [enabled, setEnabled] = useState(plugin ? isPluginEnabled(plugin.name) : false);
+        const [enabled, setEnabled] = useState(!!plugin && isPluginEnabled(plugin.name));
 
         useEffect(() => {
             if (!plugin) return;
@@ -385,9 +357,7 @@ export default definePlugin({
             if (!wasEnabled) {
                 const { restartNeeded, failures } = startDependenciesRecursive(plugin);
                 if (failures.length) {
-                    showToast(`Failed to start dependencies: ${failures.join(", ")}`, Toasts.Type.FAILURE, {
-                        position: Toasts.Position.BOTTOM
-                    });
+                    showToast(`Failed to start dependencies: ${failures.join(", ")}`, Toasts.Type.FAILURE, { position: Toasts.Position.BOTTOM });
                     return;
                 }
                 if (restartNeeded) {
@@ -411,14 +381,14 @@ export default definePlugin({
             const result = wasEnabled ? stopPlugin(plugin) : startPlugin(plugin);
             if (!result) {
                 Settings.plugins[plugin.name].enabled = false;
-                showToast(`Error while ${wasEnabled ? "stopping" : "starting"} plugin ${plugin.name}`, Toasts.Type.FAILURE, {
-                    position: Toasts.Position.BOTTOM
-                });
+                showToast(`Error while ${wasEnabled ? "stopping" : "starting"} plugin ${plugin.name}`, Toasts.Type.FAILURE, { position: Toasts.Position.BOTTOM });
                 return;
             }
 
             Settings.plugins[plugin.name].enabled = !wasEnabled;
         }
+
+        const buttons: JSX.Element[] = [];
 
         if (shouldAddUpdateButton) {
             buttons.push(
@@ -433,7 +403,7 @@ export default definePlugin({
                             else
                                 showToast("Already up to date!", Toasts.Type.MESSAGE);
                         } catch (e) {
-                            new Logger(this.name).error("Error while updating:", e);
+                            logger.error("Error while updating:", e);
                             showToast("Failed to update :(", Toasts.Type.FAILURE);
                         }
                     }}
@@ -441,70 +411,63 @@ export default definePlugin({
             );
         }
 
-        if (props.channel.parent_id === SUPPORT_CATEGORY_ID && PermissionStore.can(PermissionsBits.SEND_MESSAGES, props.channel)) {
-            if (props.message.content.includes("/velocity-debug") || props.message.content.includes("/velocity-plugins")) {
-                buttons.push(
-                    <Buttons.Button
-                        key="vc-dbg"
-                        onClick={async () => sendMessage(props.channel.id, { content: await generateDebugInfoMessage() })}
-                        text="Run /velocity-debug"
-                        size="sm"
-                    />,
-                    <Buttons.Button
-                        key="vc-plg-list"
-                        onClick={async () => {
-                            const pluginList = generatePluginList();
-                            if (typeof pluginList === "string") {
-                                sendMessage(props.channel.id, { content: pluginList });
-                            } else if (pluginList && typeof pluginList === "object" && pluginList.uploadFile) {
-                                try {
-                                    await uploadPluginListFile(props.channel.id, pluginList.fileContent, pluginList.filename);
-                                    showToast("Plugin list uploaded successfully!", Toasts.Type.SUCCESS);
-                                } catch (e) {
-                                    new Logger("SupportHelper").error("Failed to upload plugin list:", e);
-                                    showToast("Failed to upload plugin list", Toasts.Type.FAILURE);
-                                }
-                            }
-                        }}
-                        text="Run /velocity-plugins"
-                        size="sm"
-                    />
-                );
-            }
-        }
-
-        if (plugin) {
-            return (
-                <>
-                    <Card style={{ padding: "8px 12px", maxWidth: "350px" }} className={classes(Margins.top8, Margins.bottom8)}>
-                        <Flex flexDirection="column" gap="12px" >
-                            <Flex alignItems="center" gap="12px">
-                                <div style={{ flexShrink: 0 }}>
-                                    <PluginsIcon color="control-icon-only-icon-default" />
-                                </div>
-                                <Flex flexDirection="column" gap="4px">
-                                    <Text variant="text-md/semibold" >
-                                        {plugin.name}{plugin.required && <Span color="text-feedback-critical" style={{ display: "inline", userSelect: "none" }}> *</Span>}
-                                    </Text>
-                                    <Text lineClamp={2} variant="text-sm/normal" color="text-muted">
-                                        {plugin.description}
-                                    </Text>
-                                </Flex>
-                            </Flex>
-                            <Buttons.ButtonGroup direction="horizontal" gap="8" >
-                                <Buttons.Button fullWidth icon={PluginsIcon} text="View Plugin" size="sm" onClick={() => openPluginModal(plugin)} />
-                                {!plugin.required && !plugin.isDependency && <Buttons.Button variant={enabled ? "critical-primary" : "active"} icon={() => <Icons.SettingsIcon color="currentColor" size="xs" />} text={enabled ? "Disable" : "Enable"} size="sm" onClick={handleToggle} />}
-                            </Buttons.ButtonGroup>
-                        </Flex >
-                    </Card >
-                    {buttons.length > 0 && <Buttons.ButtonGroup direction="horizontal" gap="8">{buttons}</Buttons.ButtonGroup>}
-                </>
+        if (hasDebugCommand && props.channel.parent_id === SUPPORT_CATEGORY_ID && PermissionStore.can(PermissionsBits.SEND_MESSAGES, props.channel)) {
+            buttons.push(
+                <Buttons.Button
+                    key="vc-dbg"
+                    onClick={async () => sendMessage(props.channel.id, { content: await generateDebugInfoMessage() })}
+                    text="Run /velocity-debug"
+                    size="sm"
+                />,
+                <Buttons.Button
+                    key="vc-plg-list"
+                    onClick={() => sendPluginList(props.channel.id)}
+                    text="Run /velocity-plugins"
+                    size="sm"
+                />
             );
         }
 
-        return buttons.length
-            ? <Buttons.ButtonGroup direction="horizontal" gap="8">{buttons}</Buttons.ButtonGroup>
-            : null;
+        if (!plugin && !buttons.length) return null;
+
+        const buttonGroup = buttons.length > 0 && <Buttons.ButtonGroup direction="horizontal" gap="8">{buttons}</Buttons.ButtonGroup>;
+
+        if (!plugin) return buttonGroup;
+
+        return (
+            <>
+                <Card style={{ padding: "8px 12px", maxWidth: "350px" }} className={classes(Margins.top8, Margins.bottom8)}>
+                    <Flex flexDirection="column" gap="12px">
+                        <Flex alignItems="center" gap="12px">
+                            <div style={{ flexShrink: 0 }}>
+                                <PluginsIcon color="control-icon-only-icon-default" />
+                            </div>
+                            <Flex flexDirection="column" gap="4px">
+                                <Text variant="text-md/semibold">
+                                    {plugin.name}{plugin.required && <Span color="text-feedback-critical" style={{ display: "inline", userSelect: "none" }}> *</Span>}
+                                </Text>
+                                <Text lineClamp={2} variant="text-sm/normal" color="text-muted">
+                                    {plugin.description}
+                                </Text>
+                            </Flex>
+                        </Flex>
+                        <Buttons.ButtonGroup direction="horizontal" gap="8">
+                            <Buttons.Button fullWidth icon={PluginsIcon} text="View Plugin" size="sm" onClick={() => openPluginModal(plugin)} />
+                            {!plugin.required && !plugin.isDependency && (
+                                <Buttons.Button
+                                    variant={enabled ? "critical-primary" : "active"}
+                                    icon={() => <Icons.SettingsIcon color="currentColor" size="xs" />}
+                                    text={enabled ? "Disable" : "Enable"}
+                                    size="sm"
+                                    onClick={handleToggle}
+                                />
+                            )}
+                        </Buttons.ButtonGroup>
+                    </Flex>
+                </Card>
+                {buttonGroup}
+            </>
+        );
     },
 
     renderContributorDmWarningCard: ErrorBoundary.wrap(({ channel }) => {

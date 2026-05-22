@@ -180,7 +180,7 @@ export interface PluginDef {
      * Allows you to specify a custom Component that will be rendered in your
      * plugin's settings page
      */
-    settingsAboutComponent?: React.ComponentType<{}>;
+    settingsAboutComponent?: ComponentType<{}>;
     /**
      * Allows you to subscribe to Flux events
      */
@@ -197,7 +197,7 @@ export interface PluginDef {
      */
     toolboxActions?: Record<string, () => void> | (() => ReactNode);
 
-    renderBadge?: () => React.ReactNode;
+    renderBadge?: () => ReactNode;
 
     /**
      * Managed style to automatically enable and disable when the plugin is enabled or disabled

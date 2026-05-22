@@ -98,7 +98,7 @@ export interface UserProfile extends UserProfileBase, Pick<User, "premiumType"> 
     fetchEndedAt: number;
     legacyUsername?: string;
     premiumGuildSince: ?Date;
-    premiumSince: Date | null;
+    premiumSince: ?Date;
 }
 
 export class UserProfileStore extends FluxStore {

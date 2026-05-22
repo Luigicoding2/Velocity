@@ -20,15 +20,15 @@ import "./styles.css";
 
 import { definePluginSettings } from "@api/Settings";
 import ErrorBoundary from "@components/ErrorBoundary";
-import { Flex } from "@components/Flex";
 import { Margins } from "@components/margins";
+import { SectionHeader } from "@components/settings";
 import { Devs } from "@utils/constants";
 import { copyWithToast, fetchUserProfile } from "@utils/discord";
 import { useAwaiter } from "@utils/react";
 import definePlugin, { OptionType } from "@utils/types";
 import type { User, UserProfile } from "@velocity-types";
 import { findComponentByCodeLazy } from "@webpack";
-import { Buttons, ColorPicker, Forms, Text, UserProfileStore, UserStore, useState } from "@webpack/common";
+import { Buttons, ColorPicker, Forms, UserProfileStore, UserStore, useState } from "@webpack/common";
 import virtualMerge from "virtual-merge";
 
 interface Colors {
@@ -113,72 +113,62 @@ function SettingsAboutComponent() {
 
     return (
         <section>
-            <Forms.FormTitle tag="h3">Usage</Forms.FormTitle>
-            <Forms.FormText>
-                After enabling this plugin, you will see custom colors in
-                the profiles of other people using compatible plugins.{" "}
-            </Forms.FormText>
-            <Forms.FormText className={Margins.top8}>
-                <strong>To set your own profile theme colors:</strong>
-                <ul>
-                    <li>&mdash; use the color pickers below to choose your colors</li>
-                    <li>&mdash; click the "Copy 3y3" button</li>
-                    <li>&mdash; paste the invisible text anywhere in your bio</li>
-                </ul>
-                <Forms.FormDivider gap={8} />
-                <Forms.FormTitle tag="h3">Color pickers</Forms.FormTitle>
-                <Flex gap="1em">
-                    <ColorPicker
-                        color={color1}
-                        label={
-                            <Text
-                                variant={"text-xs/normal"}
-                                style={{ marginTop: "4px" }}
-                            >
-                                Primary
-                            </Text>
-                        }
-                        onChange={(color: number) => {
-                            setColor1(color);
-                        }}
-                    />
-                    <ColorPicker
-                        color={color2}
-                        label={
-                            <Text
-                                variant={"text-xs/normal"}
-                                style={{ marginTop: "4px" }}
-                            >
-                                Accent
-                            </Text>
-                        }
-                        onChange={(color: number) => {
-                            setColor2(color);
-                        }}
-                    />
-                    <Buttons.Button
-                        text="Copy 3y3"
-                        onClick={() => {
-                            const colorString = encode(color1, color2);
-                            copyWithToast(colorString);
-                        }}
-                    />
-                </Flex>
-                <Forms.FormDivider gap={8} />
-                <Forms.FormTitle tag="h3">Preview</Forms.FormTitle>
-                <div className="vc-fpt-preview">
-                    <ProfileModal
-                        user={UserStore.getCurrentUser()}
-                        pendingThemeColors={[color1, color2]}
-                        onAvatarChange={() => { }}
-                        onBannerChange={() => { }}
-                        canUsePremiumCustomization={true}
-                        hideExampleButton={true}
-                        hideFakeActivity={true}
-                        isTryItOut={true}
-                    />
-                </div>
-            </Forms.FormText>
+            <SectionHeader
+                tag="h3"
+                title="Usage"
+                description={<>
+                    After enabling this plugin, you will see custom colors in
+                    the profiles of other people using compatible plugins.{" "}
+                    <div className={Margins.top8}>
+                        <strong>To set your own profile theme colors:</strong>
+                        <ul>
+                            <li>&mdash; use the color pickers below to choose your colors</li>
+                            <li>&mdash; click the "Copy 3y3" button</li>
+                            <li>&mdash; paste the invisible text anywhere in your bio</li>
+                        </ul>
+                        <Forms.FormDivider gap={8} />
+                        <Forms.FormTitle tag="h3">Color pickers</Forms.FormTitle>
+                        <div className="vc-fpt-color-pickers">
+                            <ColorPicker
+                                color={color1}
+                                label="Primary"
+                                onChange={(color: number) => {
+                                    setColor1(color);
+                                }}
+                            />
+                            <ColorPicker
+                                color={color2}
+                                label="Accent"
+                                onChange={(color: number) => {
+                                    setColor2(color);
+                                }}
+                            />
+                            <Buttons.Button
+                                text="Copy 3y3"
+                                size="sm"
+                                onClick={() => {
+                                    const colorString = encode(color1, color2);
+                                    copyWithToast(colorString);
+                                }}
+                            />
+                        </div>
+                        <Forms.FormDivider gap={8} />
+                        <Forms.FormTitle tag="h3">Preview</Forms.FormTitle>
+                        <div className="vc-fpt-preview">
+                            <ProfileModal
+                                user={UserStore.getCurrentUser()}
+                                pendingThemeColors={[color1, color2]}
+                                onAvatarChange={() => { }}
+                                onBannerChange={() => { }}
+                                canUsePremiumCustomization={true}
+                                hideExampleButton={true}
+                                hideFakeActivity={true}
+                                isTryItOut={true}
+                            />
+                        </div>
+                    </div>
+                </>}
+            />
         </section>);
 }
 
@@ -196,7 +186,7 @@ export default definePlugin({
             }
         },
         {
-            find: "#{intl::USER_SETTINGS_RESET_PROFILE_THEME}",
+            find: "#{intl::USER_SETTINGS_RESET_PROFILE_THEME}),onClick:",
             lazy: true,
             replacement: {
                 match: /#{intl::USER_SETTINGS_RESET_PROFILE_THEME}\).+?}\)(?=\])(?<=color:(\i),.{0,500}?color:(\i),.{0,500}?)/,

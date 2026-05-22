@@ -18,15 +18,12 @@
 
 import { findGroupChildrenByChildId, type NavContextMenuPatchCallback } from "@api/ContextMenu";
 import { CodeBlock } from "@components/CodeBlock";
-import ErrorBoundary from "@components/ErrorBoundary";
 import { Margins } from "@components/margins";
 import { Devs } from "@utils/constants";
 import { copyWithToast } from "@utils/discord";
-import { classes } from "@utils/misc";
-import { ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalRoot, ModalSize } from "@utils/modal";
 import definePlugin from "@utils/types";
 import type { Embed, Message } from "@velocity-types";
-import { Buttons, CMIconClasses, Forms, Icons, Menu, openModal, Text } from "@webpack/common";
+import { Forms, Icons, Menu, Modal, openModal } from "@webpack/common";
 
 import { cleanEmbed, copyEmbedContent } from "./utils";
 
@@ -35,53 +32,44 @@ function openEmbedRawModal(msg: Message) {
     const embedJson = JSON.stringify({ content: null, embeds: cleanEmbeds, attachments: [] }, null, 4);
 
     openModal(props => (
-        <ErrorBoundary>
-            <ModalRoot {...props} size={ModalSize.MEDIUM}>
-                <ModalHeader>
-                    <Text className={Margins.bottom16} tag="h3" variant="text-md/semibold" style={{ flexGrow: 1 }}>View Raw Embeds</Text>
-                    <ModalCloseButton onClick={props.onClose} />
-                </ModalHeader>
-                <ModalContent>
-                    {cleanEmbeds.map((embed, i) => (
-                        <>
-                            {i > 0 && (
-                                <Forms.FormDivider
-                                    className={`${Margins.top16} ${Margins.bottom20}`}
-                                />
-                            )}
-                            <Forms.FormTitle tag="h5">
-                                Embed {i + 1} Data
-                            </Forms.FormTitle>
-                            <CodeBlock
-                                content={JSON.stringify(embed, null, 4)}
-                                lang="json"
-                                className={Margins.bottom20}
-                            />
-                        </>
-                    ))}
+        <Modal {...props} title="View Raw Embeds" actions={[
+            {
+                text: "Copy All Embeds JSON",
+                onClick: () => copyWithToast(embedJson, "All embed data copied to clipboard!")
+            }
+        ]}>
+            <div>
+                {cleanEmbeds.map((embed, i) => (
+                    <>
+                        {i > 0 && (
+                            <Forms.FormDivider gap={18} />
+                        )}
+                        <Forms.FormTitle tag="h5">
+                            Embed {i + 1} Data
+                        </Forms.FormTitle>
+                        <CodeBlock
+                            content={JSON.stringify(embed, null, 4)}
+                            lang="json"
+                            className={Margins.bottom20}
+                        />
+                    </>
+                ))}
 
-                    {cleanEmbeds.length > 1 && (
-                        <>
-                            <Forms.FormDivider className={classes(Margins.top16, Margins.bottom20)} />
-                            <Forms.FormTitle tag="h5">
-                                All Embeds Combined
-                            </Forms.FormTitle>
-                            <CodeBlock
-                                content={embedJson}
-                                lang="json"
-                                className={Margins.bottom20}
-                            />
-                        </>
-                    )}
-                </ModalContent>
-                <ModalFooter>
-                    <Buttons.Button
-                        text="Copy All Embeds JSON"
-                        onClick={() => copyWithToast(embedJson, "All embed data copied to clipboard!")}
-                    />
-                </ModalFooter>
-            </ModalRoot>
-        </ErrorBoundary>
+                {cleanEmbeds.length > 1 && (
+                    <>
+                        <Forms.FormDivider gap={18} />
+                        <Forms.FormTitle tag="h5">
+                            All Embeds Combined
+                        </Forms.FormTitle>
+                        <CodeBlock
+                            content={embedJson}
+                            lang="json"
+                            className={Margins.bottom20}
+                        />
+                    </>
+                )}
+            </div>
+        </Modal>
     ));
 }
 
@@ -103,13 +91,13 @@ const messageContextCallback: NavContextMenuPatchCallback = (children, props) =>
                     id="data"
                     label="Copy Embed Data"
                     action={() => copyEmbedContent(props.message, "embed")}
-                    icon={() => <Icons.AngleBracketsIcon className={CMIconClasses.icon} />}
+                    icon={Icons.AngleBracketsIcon}
                 />
                 <Menu.MenuItem
                     id="full"
                     label="Copy Full JSON"
                     action={() => copyEmbedContent(props.message, "full")}
-                    icon={() => <Icons.TopicsIcon className={CMIconClasses.icon} />}
+                    icon={Icons.TopicsIcon}
                 />
                 <Menu.MenuSeparator />
                 {props.message.embeds.filter((e: Embed) => e.rawDescription).length > 1 ? (
@@ -124,7 +112,7 @@ const messageContextCallback: NavContextMenuPatchCallback = (children, props) =>
                                     id={`desc-${i}`}
                                     label={`Copy Embed ${i + 1} Description`}
                                     action={() => copyEmbedContent(props.message, "description", i)}
-                                    icon={() => <Icons.ClipboardListIcon className={CMIconClasses.icon} />}
+                                    icon={Icons.ClipboardListIcon}
                                 />
                             ) : null
                         )}
@@ -134,21 +122,21 @@ const messageContextCallback: NavContextMenuPatchCallback = (children, props) =>
                         id="vc-copy-embed-description"
                         label="Copy Embed Description"
                         action={() => copyEmbedContent(props.message, "description", 0)}
-                        icon={() => <Icons.ClipboardListIcon className={CMIconClasses.icon} />}
+                        icon={Icons.ClipboardListIcon}
                     />
                 ) : null}
                 <Menu.MenuItem
                     id="vc-copy-embed-builder"
                     label="Copy EmbedBuilder"
                     action={() => copyEmbedContent(props.message, "builder")}
-                    icon={() => <Icons.CopyIcon className={CMIconClasses.icon} />}
+                    icon={Icons.CopyIcon}
                 />
                 <Menu.MenuSeparator />
                 <Menu.MenuItem
                     id="vc-view-raw-embed"
                     label="View Raw Embed"
                     action={() => openEmbedRawModal(props.message)}
-                    icon={() => <Icons.TopicsIcon className={CMIconClasses.icon} />}
+                    icon={Icons.TopicsIcon}
                 />
             </Menu.MenuItem>
         );

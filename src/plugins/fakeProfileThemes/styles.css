@@ -1,3 +1,8 @@
 .vc-fpt-preview * {
     pointer-events: none;
 }
+
+.vc-fpt-color-pickers {
+    display: flex;
+    gap: 1em;
+}

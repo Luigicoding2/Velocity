@@ -26,9 +26,11 @@ import { classNameFactory } from "@utils/css";
 import { getIntlMessage, openUserProfile } from "@utils/discord";
 import definePlugin, { OptionType } from "@utils/types";
 import type { Guild, ModalPropsRender, User } from "@velocity-types";
-import { Avatar, Buttons, Clickable, DateUtils, Forms, GuildActions, HelpMessage, Icons, Modal, Text, TextInput, Tooltip, useState } from "@webpack/common";
+import { Avatar, Buttons, Clickable, DateUtils, Forms, GuildActions, HelpMessage, Icons, Modal, Select, Text, TextInput, Tooltip, useState } from "@webpack/common";
 
 const cl = classNameFactory("vc-bbr-");
+
+let optionReasons: any[] = [];
 
 interface BanModalProps extends ModalPropsRender {
     guild: Guild;
@@ -36,34 +38,59 @@ interface BanModalProps extends ModalPropsRender {
     ban: { reason: string | null; };
 }
 
+interface BanReason {
+    text: string;
+    deleteSeconds?: number;
+}
+
+const normalize = (r: BanReason | string): BanReason => typeof r === "string" ? { text: r } : r;
+const toPlain = (r: BanReason): BanReason => r.deleteSeconds != null ? { text: r.text, deleteSeconds: r.deleteSeconds } : { text: r.text };
+
 function ReasonsComponent() {
-    const { reasons } = settings.use(["reasons"]);
+    const reasons = settings.use(["reasons"]).reasons.map(normalize);
+
+    const save = (list: BanReason[]) => {
+        settings.store.reasons = list.map(toPlain);
+    };
 
     return (
         <div>
             {reasons.map((r, i) => (
-                <Flex className={Margins.bottom16} flexDirection="row" gap="0.5em" key={i}>
-                    <TextInput
-                        placeholder={getIntlMessage("BAN_REASON")}
-                        value={r}
-                        onChange={v => {
-                            const list = [...reasons];
-                            list[i] = v;
-                            settings.store.reasons = list;
-                        }}
-                        trailing={{
-                            type: "icon",
-                            tooltip: getIntlMessage("REMOVE"),
-                            disabled: reasons.length <= 1,
-                            icon: () => <Icons.TrashIcon color={reasons.length <= 1 ? "var(--icon-muted)" : "var(--icon-feedback-critical)"} size="sm" />,
-                            onClick: () => {
-                                const list = [...reasons];
-                                list.splice(i, 1);
-                                settings.store.reasons = list;
-                            }
-                        }}
-                    />
-                </Flex>
+                <div key={i}>
+                    <Flex className={Margins.bottom16} flexDirection="row" gap="0.5em">
+                        <TextInput
+                            placeholder={getIntlMessage("BAN_REASON")}
+                            value={r.text}
+                            onChange={v => {
+                                const list = reasons.map(toPlain);
+                                list[i] = { ...list[i], text: v };
+                                save(list);
+                            }}
+                            trailing={{
+                                type: "icon",
+                                tooltip: getIntlMessage("REMOVE"),
+                                disabled: settings.store.reasons.length <= 1,
+                                icon: () => {
+                                    const isLast = settings.store.reasons.length <= 1;
+                                    return <Icons.TrashIcon color={isLast ? "var(--icon-muted)" : "var(--icon-feedback-critical)"} size="sm" />;
+                                },
+                                onClick: () => {
+                                    const list = reasons.map(toPlain);
+                                    list.splice(i, 1);
+                                    save(list);
+                                }
+                            }}
+                        />
+                        <Select
+                            options={optionReasons}
+                            select={v => {
+                                save(reasons.map((x, j) => j === i ? { ...toPlain(x), deleteSeconds: v ?? undefined } : toPlain(x)));
+                            }}
+                            isSelected={v => (v ?? null) === (r.deleteSeconds ?? null)}
+                            serialize={v => v == null ? "default" : String(v)}
+                        />
+                    </Flex>
+                </div>
             ))}
 
             <Buttons.Button
@@ -71,9 +98,7 @@ function ReasonsComponent() {
                 variant="secondary"
                 size="sm"
                 icon={() => <Icons.PlusSmallIcon />}
-                onClick={() => {
-                    settings.store.reasons = [...reasons, ""];
-                }}
+                onClick={() => save([...reasons.map(toPlain), { text: "" }])}
             />
         </div>
     );
@@ -81,7 +106,7 @@ function ReasonsComponent() {
 
 function BanModalComponent({ guild, user, ban, ...modalProps }: BanModalProps) {
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
+    const [error, setError] = useState<string | null>(null);
     const [copied, setCopied] = useState(false);
 
     const handleUnban = async () => {
@@ -91,7 +116,7 @@ function BanModalComponent({ guild, user, ban, ...modalProps }: BanModalProps) {
             await GuildActions.unbanUser(guild.id, user.id);
             modalProps.onClose();
         } catch (e: any) {
-            setError(e.body?.message);
+            setError(e.body?.message ?? null);
             setLoading(false);
         }
     };
@@ -175,7 +200,7 @@ const settings = definePluginSettings({
     reasons: {
         description: "Racist, Gay etc..",
         type: OptionType.COMPONENT,
-        default: [] as string[],
+        default: [] as BanReason[],
         component: ReasonsComponent
     },
     betterModal: {
@@ -186,7 +211,7 @@ const settings = definePluginSettings({
     },
     isOtherDefault: {
         type: OptionType.BOOLEAN,
-        description: "Selects the other option by default. (Shows a text input)"
+        description: "Selects the 'Other' option by default. (Shows a text input)"
     }
 });
 
@@ -210,6 +235,10 @@ export default definePlugin({
                 {
                     match: /(?:\w+\.)?useState\(""\)(?=.{0,200}isArchivedThread)/,
                     replace: "useState($self.getDefaultState())"
+                },
+                {
+                    match: /return\s*(\[\{id:"none".+?\}\])/,
+                    replace: "return $self.captureOptions($1)"
                 }
             ]
         },
@@ -229,16 +258,21 @@ export default definePlugin({
     },
 
     getReasons() {
-        const storedReasons = settings.store.reasons.filter((r: string) => r.trim());
-        const reasons: string[] = storedReasons.length
-            ? storedReasons
+        const storedReasons = settings.store.reasons.map(normalize).filter(r => r.text.trim());
+        const pairs = storedReasons.length
+            ? storedReasons.map(r => ({ name: r.text, value: r.text }))
             : [
                 getIntlMessage("BAN_REASON_OPTION_SPAM_ACCOUNT"),
                 getIntlMessage("BAN_REASON_OPTION_HACKED_ACCOUNT"),
                 getIntlMessage("BAN_REASON_OPTION_BREAKING_RULES")
-            ];
-        return reasons.map(s => ({ name: s, value: s })).concat({ name: getIntlMessage("BAN_REASON_OPTION_OTHER"), value: "other" });
+            ].map(s => ({ name: s, value: s }));
+        return pairs.concat({ name: getIntlMessage("BAN_REASON_OPTION_OTHER"), value: "other" });
     },
 
-    getDefaultState: () => settings.store.isOtherDefault ? "other" : ""
+    getDefaultState: () => settings.store.isOtherDefault ? "other" : "",
+
+    captureOptions(opts: any[]) {
+        optionReasons = opts;
+        return opts;
+    }
 });
