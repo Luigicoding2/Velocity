@@ -108,14 +108,18 @@ export interface RestRequestData<TUrl extends string = string> {
 // TODO Make this better somehow
 type RestRequestDataType<TUrl extends string> = TUrl extends PostPayloads["url"] ? Extract<PostPayloads, { url: TUrl; }> : RestRequestData<TUrl> & { body?: unknown; };
 
-type ResponseData<TBody = any> =
-    | { ok: true; body: TBody; headers: any; retryAfter?: number; status: number; text: string; }
-    | { ok: false; body: { code: number; message: string; }; headers: any; retryAfter?: number; status: number; text: string; };
-
+type ResponseData<TBody = any> = {
+    headers: any;
+    retryAfter?: number;
+    status: number;
+    text: string;
+} & (
+        { ok: true; body: TBody; } |
+        { ok: false; body: { code: number; message: string; } & Record<string, any>; });
 
 export type RestAPI = Record<'post' | 'patch' | 'put' | 'del', <TUrl extends PostPayloads["url"] | (string & {}) >(data: RestRequestDataType<TUrl>) => Promise<ResponseData>> & {
     // guh
-    get: <TUrl extends PostPayloads["url"] | (string & {}) >(data: RestRequestData<TUrl>) => Promise<ResponseData<GetPayloads<TUrl>>>;
+    get: <TUrl extends string, TBody = string extends TUrl ? any : GetPayloads<TUrl>>(data: RestRequestData<TUrl>) => Promise<ResponseData<TBody>>;
 };
 
 export type Permissions = "CREATE_INSTANT_INVITE"

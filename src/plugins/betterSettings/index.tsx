@@ -18,14 +18,15 @@
 
 import { definePluginSettings } from "@api/Settings";
 import { disableStyle, enableStyle } from "@api/Styles";
+import { VelocityIcon } from "@components/Icons";
 import { buildPluginMenuEntries, buildThemeMenuEntries } from "@plugins/velocityToolbox/menu";
 import { Devs } from "@utils/constants";
 import { classNameFactory } from "@utils/css";
 import { Logger } from "@utils/Logger";
 import definePlugin, { OptionType } from "@utils/types";
 import { findCssClassesLazy } from "@webpack";
-import { ComponentDispatch, FocusLock, Menu, useEffect, useRef } from "@webpack/common";
-import type { HTMLAttributes, ReactNode } from "react";
+import { ComponentDispatch, FocusLock, Icons, Menu, useEffect, useRef } from "@webpack/common";
+import type { ComponentType, HTMLAttributes, ReactNode } from "react";
 
 import fullHeightStyle from "./fullHeightContext.css?managed";
 
@@ -52,6 +53,16 @@ const settings = definePluginSettings({
         restartNeeded: true
     }
 });
+
+const SECTION_ICONS = (): Record<string, ComponentType<any>> => ({
+    user_section: Icons.SettingsIcon,
+    billing_section: Icons.CreditCardIcon,
+    app_section: Icons.AppsIcon,
+    activity_section: Icons.GameControllerIcon,
+    developer_section: Icons.StaffBadgeIcon,
+    staff_only_section: Icons.ShieldIcon
+});
+
 
 interface LayerProps extends HTMLAttributes<HTMLDivElement> {
     mode: "SHOWN" | "HIDDEN";
@@ -222,7 +233,10 @@ export default definePlugin({
                     // Flatten velocity entries directly instead of nesting under broken title
                     const children = props.children ?? [];
                     items.push(
-                        <Menu.MenuItem key={key} id={key} label="Velocity Settings">
+                        <Menu.MenuItem key={key} id={key} label="Velocity Settings" leadingAccessory={{
+                            type: "icon",
+                            icon: VelocityIcon
+                        }}>
                             {this.transformSettingsEntries(
                                 Array.isArray(children) ? children : [children]
                             )}
@@ -230,10 +244,18 @@ export default definePlugin({
                     );
                     continue;
                 }
-
+                const iconLeft = SECTION_ICONS()[key];
                 items.push(
-                    <Menu.MenuItem key={key} id={key} label={props.label}>
-                        {this.transformSettingsEntries(props.children ?? [])}
+                    <Menu.MenuItem
+                        key={key}
+                        label={props.label}
+                        id={props.label}
+                        leadingAccessory={{
+                            type: "icon",
+                            icon: iconLeft
+                        }}
+                    >
+                        {this.transformSettingsEntries(props.children)}
                     </Menu.MenuItem>
                 );
             } else {
