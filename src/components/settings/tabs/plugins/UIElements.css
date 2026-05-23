@@ -29,7 +29,7 @@
 .vc-plugin-ui-elements-modal-content {
     display: flex;
     flex-direction: column;
-    gap: 0.5em;
+    gap: 1em;
 }
 
 .vc-plugin-ui-elements-switches {

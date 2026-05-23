@@ -16,27 +16,50 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import { RendererSettings } from "@main/settings";
 import { BrowserWindow, desktopCapturer, type IpcMainInvokeEvent } from "electron";
+import blackHtml from "file://./modes/black.html?minify";
+import colorsHtml from "file://./modes/colors.html?minify";
+import flashingHtml from "file://./modes/flashing.html?minify";
+import whiteHtml from "file://./modes/white.html?minify";
 
-let fakeWindow: BrowserWindow | null = null;
+let crashedWindow: BrowserWindow | null = null;
+let cachedSourceId: string | null = null;
+let activeMode: string | null = null;
 
-const HTML = "data:text/html,<canvas id='c' width='1920' height='1080'></canvas><script>const ctx=document.getElementById('c').getContext('2d');let w=false;function draw(){ctx.fillStyle=w?'%23fff':'%23000';w=!w;ctx.fillRect(0,0,1920,1080);}window._int=setInterval(draw,500);draw();</script>";
+const Modes: Record<string, string> = {
+    black: `data:text/html,${encodeURIComponent(blackHtml)}`,
+    flashing: `data:text/html,${encodeURIComponent(flashingHtml)}`,
+    white: `data:text/html,${encodeURIComponent(whiteHtml)}`,
+    colors: `data:text/html,${encodeURIComponent(colorsHtml)}`
+};
 
-export async function createFakeSource(_e: IpcMainInvokeEvent): Promise<string | null> {
-    if (fakeWindow && !fakeWindow.isDestroyed()) {
-        await fakeWindow.webContents.executeJavaScript("window._int=setInterval(draw,100);draw();");
-        fakeWindow.showInactive();
-        const sources = await desktopCapturer.getSources({ types: ["window"] });
-        return sources.find(s => s.name === "VelocityFakeStream")?.id ?? null;
+function getMode() {
+    const Plugin = RendererSettings.store.plugins?.StreamCrasher as unknown as typeof import("./index");
+    return Plugin.settings.store.crashMode;
+}
+
+export async function createCrashSource(_e: IpcMainInvokeEvent): Promise<string | null> {
+    const mode = getMode();
+    const html = Modes[mode] ?? Modes.black;
+
+    if (crashedWindow && !crashedWindow.isDestroyed()) {
+        if (activeMode !== mode) {
+            activeMode = mode;
+            crashedWindow.loadURL(html);
+        }
+        crashedWindow.showInactive();
+        return cachedSourceId;
     }
 
-    fakeWindow = new BrowserWindow({
+    activeMode = mode;
+    crashedWindow = new BrowserWindow({
         width: 1920,
         height: 1080,
         show: false,
         frame: false,
         skipTaskbar: true,
-        title: "VelocityFakeStream",
+        title: "crashed",
         webPreferences: { backgroundThrottling: false },
         x: -9999,
         y: -9999,
@@ -45,19 +68,31 @@ export async function createFakeSource(_e: IpcMainInvokeEvent): Promise<string |
     });
 
     await new Promise<void>(resolve => {
-        fakeWindow!.once("ready-to-show", resolve);
-        fakeWindow!.loadURL(HTML);
+        crashedWindow!.once("ready-to-show", resolve);
+        crashedWindow!.loadURL(html);
     });
 
-    fakeWindow.showInactive();
-    await new Promise(resolve => setTimeout(resolve, 500));
+    crashedWindow.showInactive();
 
-    const sources = await desktopCapturer.getSources({ types: ["window"] });
-    return sources.find(s => s.name === "VelocityFakeStream")?.id ?? null;
+    cachedSourceId = null;
+    for (let i = 0; i < 20; i++) {
+        const sources = await desktopCapturer.getSources({ types: ["window"] });
+        const id = sources.find(s => s.name === "crashed")?.id ?? null;
+        if (id) { cachedSourceId = id; return id; }
+        await new Promise(r => setTimeout(r, 50));
+    }
+
+    return null;
 }
 
-export function stopFakeSource(_e: IpcMainInvokeEvent) {
-    if (!fakeWindow || fakeWindow.isDestroyed()) return;
-    fakeWindow.webContents.executeJavaScript("clearInterval(window._int);audio.suspend();");
-    fakeWindow.hide();
+export function updateCrashMode(_e: IpcMainInvokeEvent) {
+    if (!crashedWindow || crashedWindow.isDestroyed()) return;
+    const mode = getMode();
+    activeMode = mode;
+    crashedWindow.loadURL(Modes[mode] ?? Modes.black);
+}
+
+export function stopCrashSource(_e: IpcMainInvokeEvent) {
+    if (!crashedWindow || crashedWindow.isDestroyed()) return;
+    crashedWindow.hide();
 }

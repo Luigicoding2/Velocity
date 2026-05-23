@@ -59,8 +59,7 @@ const SECTION_ICONS = (): Record<string, ComponentType<any>> => ({
     billing_section: Icons.CreditCardIcon,
     app_section: Icons.AppsIcon,
     activity_section: Icons.GameControllerIcon,
-    developer_section: Icons.StaffBadgeIcon,
-    staff_only_section: Icons.ShieldIcon
+    developer_section: Icons.StaffBadgeIcon
 });
 
 
@@ -178,12 +177,11 @@ export default definePlugin({
             find: "#{intl::USER_SETTINGS_ACTIONS_MENU_LABEL}",
             predicate: () => settings.store.organizeMenu,
             lazy: true,
-            replacement: [
-                {
-                    match: /children:\[(\i),(?<=\1=(?:function|.{0,30}\.openUserSettings).+?)/, // TODO .{0,30}\.openUserSettings is stable compat
-                    replace: "children:[$self.transformSettingsEntries($1),"
-                }
-            ]
+            replacement: {
+                match: /children:\[(\i),(?<=\1=(?:function|.{0,30}\.openUserSettings).+?)/, // TODO .{0,30}\.openUserSettings is stable compat
+                replace: "children:[$self.transformSettingsEntries($1),"
+            }
+
         },
         {
             find: "USER_SECTION,",
@@ -244,6 +242,7 @@ export default definePlugin({
                     );
                     continue;
                 }
+
                 const iconLeft = SECTION_ICONS()[key];
                 items.push(
                     <Menu.MenuItem

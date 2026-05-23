@@ -22,7 +22,7 @@ import { Devs } from "@utils/constants";
 import definePlugin from "@utils/types";
 import type { Channel, Message } from "@velocity-types";
 import { MessageFlags } from "@velocity-types/enums";
-import { CMIconClasses, Constants, Menu, PermissionsBits, PermissionStore, RestAPI, UserStore } from "@webpack/common";
+import { Constants, Menu, PermissionsBits, PermissionStore, RestAPI, UserStore } from "@webpack/common";
 
 const messageContextMenuPatch: NavContextMenuPatchCallback = (
     children,
@@ -47,7 +47,7 @@ const messageContextMenuPatch: NavContextMenuPatchCallback = (
             key="unsuppress-embeds"
             label={isEmbedSuppressed ? "Unsuppress Embeds" : "Suppress Embeds"}
             color={isEmbedSuppressed ? undefined : "danger"}
-            icon={isEmbedSuppressed ? () => <ImageVisible colorClass={CMIconClasses.icon} /> : () => <ImageInvisible colorClass={CMIconClasses.icon} />}
+            icon={isEmbedSuppressed ? () => <ImageVisible /> : () => <ImageInvisible />}
             action={() =>
                 RestAPI.patch({
                     url: Constants.Endpoints.MESSAGE(channel.id, messageId),
@@ -63,7 +63,8 @@ export default definePlugin({
     authors: [Devs.rad, Devs.HypedDomi],
     description: "Allows you to unsuppress embeds in messages",
     tags: ["Chat", "Utility"],
+
     contextMenus: {
-        "message": messageContextMenuPatch
+        "message": { render: messageContextMenuPatch, required: true }
     }
 });

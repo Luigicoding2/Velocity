@@ -19,7 +19,7 @@
 import "./ChatButton.css";
 
 import ErrorBoundary from "@components/ErrorBoundary";
-import { getOrderedNames } from "@components/settings/tabs/plugins/UIElements";
+import { getOrderedNames, openUIElementsModal } from "@components/settings/tabs/plugins/UIElements";
 import { Logger } from "@utils/Logger";
 import { classes } from "@utils/misc";
 import type { IconComponent } from "@utils/types";
@@ -200,7 +200,7 @@ export const ChatBarButton = ErrorBoundary.wrap((props: ChatBarButtonProps) => {
     );
 }, { noop: true });
 
-addContextMenuPatch("textarea-context", (children, args) => {
+addContextMenuPatch("textarea-context", children => {
     const { chatBarButtons } = useSettings(["uiElements.chatBarButtons.*"]).uiElements;
 
     const buttons = Array.from(ChatBarButtonMap.entries()).filter(([, data]) => !data.required);
@@ -213,7 +213,7 @@ addContextMenuPatch("textarea-context", (children, args) => {
     if (idx === -1) return;
 
     group.splice(idx, 0,
-        <Menu.MenuItem id="vc-chat-buttons" key="velocity-chat-buttons" label="Velocity Buttons">
+        <Menu.MenuItem id="vc-chat-buttons" key="velocity-chat-buttons" label="Velocity Chat Buttons" action={openUIElementsModal}>
             {buttons.map(([id]) => (
                 <Menu.MenuCheckboxItem
                     label={id}

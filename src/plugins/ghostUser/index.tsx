@@ -95,7 +95,7 @@ export default definePlugin({
     settings,
 
     contextMenus: {
-        "user-context": ghostUserPatch
+        "user-context": { render: ghostUserPatch, required: true }
     },
 
     patches: [

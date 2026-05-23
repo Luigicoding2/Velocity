@@ -17,6 +17,7 @@ export interface AvatarDecorationData {
     skuId: string;
 }
 
+
 /** Clan identity information. */
 export interface ClanData {
     badge: string;

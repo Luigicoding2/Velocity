@@ -264,7 +264,7 @@ export default definePlugin({
     settings,
 
     contextMenus: {
-        "message": patchMessageContextMenu,
+        "message": { render: patchMessageContextMenu, required: true },
         "channel-context": patchChannelContextMenu,
         "thread-context": patchChannelContextMenu,
         "user-context": patchChannelContextMenu,

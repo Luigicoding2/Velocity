@@ -22,15 +22,15 @@ import { findGroupChildrenByChildId, type NavContextMenuPatchCallback } from "@a
 import { Devs } from "@utils/constants";
 import definePlugin from "@utils/types";
 import type { DiscordLocale, Message } from "@velocity-types";
-import { findByPropsLazy, findLazy } from "@webpack";
-import { ChannelStore, Menu } from "@webpack/common";
+import { findLazy } from "@webpack";
+import { ChannelStore, i18n, Menu } from "@webpack/common";
 
 import { settings } from "./settings";
 import { setShouldShowTranslateEnabledTooltip, TranslateChatBarIcon, TranslateIcon } from "./TranslateIcon";
 import { handleTranslate, TranslationAccessory } from "./TranslationAccessory";
 import { translate } from "./utils";
 
-const locales = findByPropsLazy("getAvailableLocales");
+// please someone get better find than this.
 const iconGetter = findLazy(m => typeof m === "function" && typeof m.resolve === "function" && typeof m.keys === "function" && m.keys()?.includes("./en-US.png"));
 
 const messageCtxPatch: NavContextMenuPatchCallback = (children, { message }: { message: Message; }) => {
@@ -51,7 +51,7 @@ const messageCtxPatch: NavContextMenuPatchCallback = (children, { message }: { m
                 handleTranslate(message.id, trans);
             }}
         >
-            {locales.getAvailableLocales().map((locale: { value: DiscordLocale; name: string; }) => {
+            {i18n.getAvailableLocales().map((locale: { value: DiscordLocale; name: string; }) => {
                 // half of this is copied from discord
                 const flagSrc: string = iconGetter(`./${locale.value}.png`);
 

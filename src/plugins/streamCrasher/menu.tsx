@@ -18,11 +18,11 @@
 
 import type { NavContextMenuPatchCallback } from "@api/ContextMenu";
 import { openPluginModal } from "@components/settings";
-import { settings } from "@plugins/streamCrasher";
+import StreamCrasherPlugin, { crashModeLabels, settings } from "@plugins/streamCrasher";
 import { Icons, Menu } from "@webpack/common";
 
 export function CrasherContextMenu({ closePopout, settings }) {
-    const { isEnabled, keybindEnabled } = settings.use(["isEnabled", "keybindEnabled"]);
+    const { isEnabled, keybindEnabled, crashMode } = settings.use(["isEnabled", "keybindEnabled", "crashMode"]);
 
     return (
         <Menu.Menu navId="stream-crasher-context" onClose={closePopout}>
@@ -39,11 +39,24 @@ export function CrasherContextMenu({ closePopout, settings }) {
                 action={() => settings.store.keybindEnabled = !settings.store.keybindEnabled}
             />
             <Menu.MenuSeparator />
+            <Menu.MenuItem id="crash-mode" label="Crash Mode">
+                {Object.entries(crashModeLabels).map(([value, { value: label, subText }]) => (
+                    <Menu.MenuCheckboxItem
+                        key={value}
+                        id={`crash-mode-${value}`}
+                        label={label}
+                        subtext={subText}
+                        checked={crashMode === value}
+                        action={() => settings.store.crashMode = value}
+                    />
+                ))}
+            </Menu.MenuItem>
+            <Menu.MenuSeparator />
             <Menu.MenuItem
                 id="settings"
                 label="Crasher Settings"
                 icon={Icons.SettingsIcon}
-                action={() => openPluginModal(Velocity.Plugins.plugins.StreamCrasher)}
+                action={() => openPluginModal(StreamCrasherPlugin)}
             />
         </Menu.Menu>
     );

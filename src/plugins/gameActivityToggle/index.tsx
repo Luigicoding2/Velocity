@@ -23,14 +23,16 @@ import { getUserSettingLazy } from "@api/UserSettings";
 import ErrorBoundary from "@components/ErrorBoundary";
 import { openPluginModal } from "@components/settings";
 import { Devs } from "@utils/constants";
+import { classes } from "@utils/misc";
 import definePlugin, { OptionType } from "@utils/types";
 import { findComponentByCodeLazy, findCssClassesLazy } from "@webpack";
 import { Icons, Menu, Popout, useRef } from "@webpack/common";
 
 import managedStyle from "./style.css?managed";
 
+// Same as StreamCrasher
 const Button = findComponentByCodeLazy(".GREEN,positionKeyStemOverride:");
-const panelClasses = findCssClassesLazy("audioButtonWithMenu", "audioButtonParent", "popoutOpen", "buttonChevron");
+const Classes = findCssClassesLazy("audioButtonWithMenu", "audioButtonParent", "popoutOpen", "buttonChevron");
 const buttonClasses = findCssClassesLazy("redGlow", "enabled", "disabled", "plated");
 
 const ShowCurrentGame = getUserSettingLazy<boolean>("status", "showCurrentGame")!;
@@ -56,12 +58,12 @@ function makeIcon(showCurrentGame?: boolean, oldIcon?: boolean) {
         return (
             <svg width="20" height="20" viewBox="0 0 24 24">
                 <path
-                    fill={!showCurrentGame && !oldIcon ? "var(--status-danger)" : "currentColor"}
+                    fill={!showCurrentGame && !oldIcon ? "var(--icon-voice-muted)" : "currentColor"}
                     mask={!showCurrentGame ? "url(#gameActivityMask)" : void 0}
                     d="M3.06 20.4q-1.53 0-2.37-1.065T.06 16.74l1.26-9q.27-1.8 1.605-2.97T6.06 3.6h11.88q1.8 0 3.135 1.17t1.605 2.97l1.26 9q.21 1.53-.63 2.595T20.94 20.4q-.63 0-1.17-.225T18.78 19.5l-2.7-2.7H7.92l-2.7 2.7q-.45.45-.99.675t-1.17.225Zm14.94-7.2q.51 0 .855-.345T19.2 12q0-.51-.345-.855T18 10.8q-.51 0-.855.345T16.8 12q0 .51.345 .855T18 13.2Zm-2.4-3.6q.51 0 .855-.345T16.8 8.4q0-.51-.345-.855T15.6 7.2q-.51 0-.855.345T14.4 8.4q0 .51.345 .855T15.6 9.6ZM6.9 13.2h1.8v-2.1h2.1v-1.8h-2.1v-2.1h-1.8v2.1h-2.1v1.8h2.1v2.1Z"
                 />
                 {!showCurrentGame && <>
-                    <path fill="var(--status-danger)" d={redLinePath} />
+                    <path fill="var(--icon-voice-muted)" d={redLinePath} />
                     <mask id="gameActivityMask">
                         <rect fill="white" x="0" y="0" width="24" height="24" />
                         <path fill="black" d={maskBlackPath} />
@@ -74,7 +76,7 @@ function makeIcon(showCurrentGame?: boolean, oldIcon?: boolean) {
 
 const ChevronIcon = ({ showCurrentGame, isShown }) => (
     <svg width="15" height="15" fill="none" viewBox="0 0 24 24" style={{ transform: isShown ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}>
-        <path fill={!showCurrentGame ? "var(--status-danger)" : "currentColor"} d="M5.3 9.3a1 1 0 0 1 1.4 0l5.3 5.29 5.3-5.3a1 1 0 1 1 1.4 1.42l-6 6a1 1 0 0 1-1.4 0l-6-6a1 1 0 0 1 0-1.42Z" />
+        <path fill={!showCurrentGame ? "var(--icon-voice-muted)" : "currentColor"} d="M5.3 9.3a1 1 0 0 1 1.4 0l5.3 5.29 5.3-5.3a1 1 0 1 1 1.4 1.42l-6 6a1 1 0 0 1-1.4 0l-6-6a1 1 0 0 1 0-1.42Z" />
     </svg>
 );
 
@@ -106,51 +108,57 @@ function GameActivityToggleButton(props: { nameplate?: any; }) {
     const { oldIcon } = settings.use(["oldIcon"]);
 
     return (
-        <div className={panelClasses.audioButtonParent}>
-            <Popout
-                position="top"
-                align="left"
-                animation={Popout.Animation.FADE}
-                targetElementRef={buttonRef}
-                renderPopout={({ closePopout, nudge, setPopoutRef }) => (
-                    <div ref={setPopoutRef} style={{ transform: `translateX(${nudge - 35}px)` }}>
-                        <ActivityContextMenu closePopout={closePopout} />
-                    </div>
-                )}
-            >
-                {(popoutProps, { isShown }) => (
-                    <>
-                        <Button
-                            tooltipText={showCurrentGame ? "Disable Game Activity" : "Enable Game Activity"}
-                            icon={makeIcon(showCurrentGame, oldIcon)}
-                            className={`${panelClasses.audioButtonWithMenu} ${!showCurrentGame ? buttonClasses.redGlow : ""} ${buttonClasses.enabled}`}
-                            aria-checked={!showCurrentGame}
-                            redGlow={!showCurrentGame}
-                            plated={true}
-                            {...popoutProps}
-                            onClick={() => ShowCurrentGame.updateSetting(old => !old)}
-                            onContextMenu={e => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                popoutProps.onClick(e);
-                            }}
-                        />
-                        <div ref={buttonRef}>
-                            <Button
-                                {...popoutProps}
-                                tooltipText="Activity Options"
-                                tooltipShouldShow={!isShown}
-                                icon={() => <ChevronIcon showCurrentGame={showCurrentGame} isShown={isShown} />}
-                                className={`${panelClasses.buttonChevron} ${!showCurrentGame ? buttonClasses.redGlow : ""} ${buttonClasses.enabled} ${isShown ? panelClasses.popoutOpen : ""}`}
-                                onContextMenu={popoutProps.onClick}
-                                plated={true}
-                                redGlow={!showCurrentGame}
-                            />
-                        </div>
-                    </>
-                )}
-            </Popout>
-        </div>
+        <Popout
+            position="top"
+            align="left"
+            animation={Popout.Animation.FADE}
+            spacing={4}
+            targetElementRef={buttonRef}
+            renderPopout={({ closePopout }) => (
+                <ActivityContextMenu closePopout={closePopout} />
+            )}
+        >
+            {({ onClick: openPopout }, { isShown }) => (
+                <div
+                    ref={buttonRef}
+                    className={classes(Classes.audioButtonParent, !showCurrentGame && buttonClasses.redGlow, isShown && Classes.popoutOpen)}
+                >
+                    <Button
+                        aria-checked={!showCurrentGame}
+                        aria-label={showCurrentGame ? "Disable Game Activity" : "Enable Game Activity"}
+                        className={Classes.audioButtonWithMenu}
+                        icon={makeIcon(showCurrentGame, oldIcon)}
+                        iconForeground={undefined}
+                        innerClassName={undefined}
+                        onClick={() => ShowCurrentGame.updateSetting(old => !old)}
+                        onContextMenu={openPopout}
+                        onMouseEnter={undefined}
+                        onMouseLeave={undefined}
+                        plated={props.nameplate != null}
+                        redGlow={!showCurrentGame}
+                        role="switch"
+                        tooltipShouldShow={!isShown}
+                        tooltipText={showCurrentGame ? "Disable Game Activity" : "Enable Game Activity"}
+                    />
+                    <Button
+                        aria-label="Activity Options"
+                        className={`${Classes.buttonChevron} ${isShown ? Classes.popoutOpen : ""}`}
+                        icon={() => <ChevronIcon showCurrentGame={showCurrentGame} isShown={isShown} />}
+                        onClick={openPopout}
+                        onContextMenu={openPopout}
+                        onMouseEnter={undefined}
+                        onMouseLeave={undefined}
+                        plated={props.nameplate != null}
+                        redGlow={!showCurrentGame}
+                        tooltipForceOpen={false}
+                        tooltipPositionKey={undefined}
+                        tooltipShouldShow={!isShown}
+                        tooltipText="Activity Options"
+                        tooltipType={undefined}
+                    />
+                </div>
+            )}
+        </Popout>
     );
 }
 

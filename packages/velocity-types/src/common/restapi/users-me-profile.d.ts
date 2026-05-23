@@ -1,5 +1,5 @@
 import { PremiumType, UserFlags } from "@velocity-types/enums";
-import { ConnectedAccount, DisplayNameStyles, RestRequestData } from "../..";
+import { AvatarDecorationData, ConnectedAccount, DisplayNameStyles, RestRequestData, ToApi } from "../..";
 
 interface ProfileEffect {
     /** @description The snowflake ID of the purchased profile effect to apply */
@@ -43,7 +43,7 @@ interface UserProfileBody {
 
     /**
      * @description The user's accent/banner color as an integer representation of a hex color.
-     * Only used when no banner image is set. @requires Nitro
+     * Only works when user does not have Nitro. @see {@link theme_colors}
      */
     accent_color?: ?number;
 
@@ -64,11 +64,7 @@ interface ProfileResponseUser {
     username: string;
     global_name: ?string;
     avatar: ?string;
-    avatar_decoration_data: ?{
-        asset: string;
-        sku_id: string;
-        expires_at: ?string;
-    };
+    avatar_decoration_data: ?ToApi<AvatarDecorationData>;
     collectibles: ?{
         nameplate?: ?{
             asset: string;
@@ -154,6 +150,6 @@ export interface UserMeProfileGetResponse {
 /**
  * Allowed methods: `patch`, `get`
  */
-export interface UserMeProfilePayload extends RestRequestData<"/users/@me/profile"> {
+export interface UserMeProfilePayload extends RestRequestData<`/users/${string}/profile`> {
     body?: UserProfileBody;
 }

@@ -92,6 +92,6 @@ export default definePlugin({
     authors: [Devs.phil],
     contextMenus: {
         "user-context": userContextPatch,
-        "stream-context": streamContextPatch
+        "stream-context": { render: streamContextPatch, required: true }
     }
 });

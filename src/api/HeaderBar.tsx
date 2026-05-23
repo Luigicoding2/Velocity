@@ -19,9 +19,10 @@
 import ErrorBoundary from "@components/ErrorBoundary";
 import { Logger } from "@utils/Logger";
 import { classes } from "@utils/misc";
+import { useForceUpdater } from "@utils/react";
 import { findComponentByCodeLazy, findCssClassesLazy } from "@webpack";
 import { Clickable, Tooltip, useEffect, useState } from "@webpack/common";
-import type { ComponentType, JSX, MouseEventHandler, ReactNode } from "react";
+import type { ComponentType, JSX, MouseEventHandler, ReactNode, RefObject } from "react";
 
 const logger = new Logger("HeaderBarAPI");
 
@@ -92,7 +93,7 @@ interface ButtonEntry {
  *     onClick={() => console.log("clicked")}
  * />
  */
-export function HeaderBarButton(props: HeaderBarButtonProps & { ref?: React.RefObject<any>; }) {
+export function HeaderBarButton(props: HeaderBarButtonProps & { ref?: RefObject<any>; }) {
     const {
         icon: Icon,
         tooltip,
@@ -234,10 +235,10 @@ function HeaderBarButtons() {
 }
 
 function ChannelToolbarButtons() {
-    const [, forceUpdate] = useState(0);
+    const forceUpdate = useForceUpdater();
 
     useEffect(() => {
-        const listener = () => forceUpdate(n => n + 1);
+        const listener = () => forceUpdate;
         channelToolbarListeners.add(listener);
         return () => { channelToolbarListeners.delete(listener); };
     }, []);

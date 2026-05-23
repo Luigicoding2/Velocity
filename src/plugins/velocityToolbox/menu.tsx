@@ -18,12 +18,13 @@
 
 import { openNotificationLogModal } from "@api/Notifications/notificationLog";
 import { isPluginEnabled, isSettingDisabled, isSettingHidden, plugins } from "@api/PluginManager";
-import { Settings, ThemeActivationMode, ThemeDef, useSettings } from "@api/Settings";
+import { Settings, type ThemeDef, useSettings } from "@api/Settings";
 import { openPluginModal, openSettingsTabModal, PluginsTab, ThemesTab } from "@components/settings";
+import { openUIElementsModal } from "@components/settings/tabs/plugins/UIElements";
 import { getIntlMessage } from "@utils/discord";
 import { useAwaiter } from "@utils/react";
 import { wordsFromCamel, wordsToTitle } from "@utils/text";
-import { OptionType, Plugin } from "@utils/types";
+import { OptionType, type Plugin } from "@utils/types";
 import { Icons, Menu, showToast, useMemo, useState } from "@webpack/common";
 import type { ReactNode } from "react";
 
@@ -263,11 +264,11 @@ export function buildThemeMenuEntries() {
                             action={() => {
                                 const enabled = Theme.localThemes;
                                 const exists = enabled.some(t => t.name === theme.fileName);
-                                const strip = (t: ThemeDef) => ({ name: String(t.name), themeActivationModes: t.themeActivationModes as ThemeActivationMode });
+                                const strip = (t: ThemeDef) => ({ name: String(t.name), themeActivationModes: t.themeActivationModes });
 
                                 Theme.localThemes = exists
                                     ? enabled.filter(t => t.name !== theme.fileName).map(strip)
-                                    : [...enabled.map(strip), { name: theme.fileName, themeActivationModes: "always" as ThemeActivationMode }];
+                                    : [...enabled.map(strip), { name: theme.fileName, themeActivationModes: "always" }];
                             }}
                         />
                     ))}
@@ -336,6 +337,11 @@ export function renderPopout(onClose: () => void) {
                 id="notifications"
                 label="Open Notification Log"
                 action={openNotificationLogModal}
+            />
+            <Menu.MenuItem
+                id="ui_elements"
+                label="Open UIElements Settings"
+                action={openUIElementsModal}
             />
 
             {buildThemeMenu()}

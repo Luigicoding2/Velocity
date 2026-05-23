@@ -130,6 +130,10 @@ export function getOrderedNames(buttonMap: Map<string, any>, settings: SettingsP
     ];
 }
 
+export function openUIElementsModal(): void {
+    return void openModal(modalProps => <UIElementsModal {...modalProps} />);
+}
+
 export function UIElementsButton() {
     const { uiElements } = useSettings(["uiElements.*"]);
 
@@ -138,7 +142,7 @@ export function UIElementsButton() {
     const hasAny = chatBarOrder.length > 0 || popoverOrder.length > 0;
 
     return (
-        <div className={cl("button")} onClick={() => hasAny && openModal(modalProps => <UIElementsModal {...modalProps} />)}>
+        <div className={cl("button")} onClick={() => hasAny && openUIElementsModal()}>
             <SectionHeader
                 title={hasAny ? "Manage UI Elements" : "No UI Elements Available"}
                 titleVariant="text-md/semibold"

@@ -17,49 +17,75 @@
 */
 
 import type { PluginNative } from "@utils/types";
-import { ApplicationStreamingStore, OverlayRTCConnectionStore, VoiceActions } from "@webpack/common";
+import { ApplicationStreamingStore, VoiceActions } from "@webpack/common";
 
 export let lastSourceId: string | null = null;
-let fakeSourceId: string | null = null;
+let crashSourceId: string | null = null;
+let currentUpdate: Promise<void> | null = null;
+let pendingState: boolean | null = null;
 
 const Native = VelocityNative.pluginHelpers.StreamCrasher as PluginNative<typeof import("./native")>;
 
-export function setLastSourceId(sourceId: string | null) {
-    if (!sourceId || sourceId === fakeSourceId) return;
-    lastSourceId = sourceId;
+export function setCrashMode() {
+    Native.updateCrashMode();
 }
 
-export async function getSourceId(isEnabled: boolean) {
+/** returns true if the source was actually saved.. */
+export function setLastSourceId(sourceId: string | null): boolean {
+    if (!sourceId || sourceId === crashSourceId) return false;
+    lastSourceId = sourceId;
+    return true;
+}
+
+async function getSourceId(isEnabled: boolean): Promise<string> {
     if (isEnabled) {
         if (!lastSourceId) {
             const sources = await DiscordNative.desktopCapture.getDesktopCaptureSources({ types: ["screen"] });
             lastSourceId = sources[0]?.id ?? "default";
         }
 
-        fakeSourceId = await Native.createFakeSource();
-        return fakeSourceId ?? "";
+        crashSourceId = await Native.createCrashSource();
+        return crashSourceId ?? "";
     }
 
-    fakeSourceId = null;
-    const sources = await DiscordNative.desktopCapture.getDesktopCaptureSources({ types: ["screen"] });
-    return sources[0]?.id ?? "default";
+    crashSourceId = null;
+    return lastSourceId ?? (await DiscordNative.desktopCapture.getDesktopCaptureSources({ types: ["screen"] }))[0]?.id ?? "default";
 }
 
-export async function updateStream(isEnabled: boolean) {
-    const isStreaming = ApplicationStreamingStore.getCurrentUserActiveStream() != null;
-    if (!isStreaming) return;
+async function doUpdateStream(isEnabled: boolean) {
+    try {
+        // The streaming store may not have updated yet when called from MEDIA_ENGINE_SET_GO_LIVE_SOURCE
+        let streaming = ApplicationStreamingStore.getCurrentUserActiveStream() != null;
+        if (!streaming) {
+            await new Promise(resolve => setTimeout(resolve, 500));
+            streaming = ApplicationStreamingStore.getCurrentUserActiveStream() != null;
+            if (!streaming) return;
+        }
 
-    const sourceId = await getSourceId(isEnabled);
+        const sourceId = await getSourceId(isEnabled);
 
-    while (OverlayRTCConnectionStore.getConnectionState() !== "RTC_CONNECTED") {
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        VoiceActions.setGoLiveSource({
+            desktopSettings: { sourceId, sound: false },
+            qualityOptions: { preset: 2, resolution: 0, frameRate: 60 },
+            context: "stream"
+        });
+
+        if (!isEnabled) Native.stopCrashSource();
+    } catch { }
+}
+
+export function updateStream(isEnabled: boolean) {
+    if (currentUpdate) {
+        pendingState = isEnabled;
+        return;
     }
 
-    VoiceActions.setGoLiveSource({
-        desktopSettings: { sourceId, sound: false },
-        qualityOptions: { preset: 0, resolution: 1080, frameRate: 60 },
-        context: "stream"
+    currentUpdate = doUpdateStream(isEnabled).finally(() => {
+        currentUpdate = null;
+        if (pendingState !== null) {
+            const next = pendingState;
+            pendingState = null;
+            updateStream(next);
+        }
     });
-
-    if (!isEnabled) Native.stopFakeSource();
 }

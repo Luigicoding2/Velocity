@@ -54,7 +54,8 @@ export const lodash: typeof import("lodash") = findByPropsLazy("debounce", "clon
 
 export const i18n = mapMangledModuleLazy(['defaultLocale:"en-US"', /initialLocale:\i/], {
     t: m => m?.[Symbol.toStringTag] === "IntlMessagesProxy",
-    intl: m => m != null && Object.getPrototypeOf(m)?.withFormatters != null
+    intl: m => m != null && Object.getPrototypeOf(m)?.withFormatters != null,
+    getAvailableLocales: filters.byCode("localizedName:")
 }, true);
 
 export let SnowflakeUtils: t.SnowflakeUtils;

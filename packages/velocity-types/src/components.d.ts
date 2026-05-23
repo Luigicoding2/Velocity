@@ -652,6 +652,9 @@ export type Paginator = ComponentType<{
 
     onPageChange?(page: number): void;
     hideMaxPage?: boolean;
+    disablePaginationGap?: boolean;
+    className?: string;
+    renderPageWrapper?(page: { type: "PAGE"; key: string; targetPage: number; selected: boolean; disabled: boolean; navigateToPage(): void; }, element: ReactNode): ReactNode;
 }>;
 
 export type TabBar = ComponentType<PropsWithChildren<{

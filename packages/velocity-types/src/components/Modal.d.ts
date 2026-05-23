@@ -1,7 +1,6 @@
 import type { ComponentType, PropsWithChildren, ReactNode, RefObject } from "react";
 import type { LiteralUnion } from "type-fest";
 import type { ButtonVariant } from "../components";
-import type { ManaModalProps } from "@utils/manaModal";
 import type { ButtonsProps } from "./Buttons";
 
 type RenderFunction = (props: ModalProps) => ReactNode | Promise<ReactNode>;
@@ -20,11 +19,14 @@ export interface ModalPropsRender {
 }
 
 export interface ModalOptions {
+    /** The key/id representing this modal, which is an auto generated number by default. */
     modalKey?: string;
     onCloseRequest?: (() => void);
     onCloseCallback?: (() => void);
     contextKey?: string;
+    /** Whether {@link modalKey this} modal can be closed */
     dismissable?: boolean;
+    /** Disables the modal opening animations */
     instant?: boolean;
     Layer?: ComponentType<{
         "aria-label"?: string;
@@ -33,7 +35,14 @@ export interface ModalOptions {
         children?: ReactNode;
     }>;
     backdropStyle?: string;
+    /**
+     * Stacking Behavior of the modal
+     * - **stack**: Stacks {@link modalKey this} modal on top of another opened modal.
+     * - **replace**: Replaces the last opened modal with {@link modalKey this} modal, When {@link modalKey this} modal closes the last modal will open back.
+     * @default replace
+    */
     stackingBehavior?: "stack" | "replace";
+    /** Makes {@link modalKey this} modal stack on other modals by default. similar to {@link stackingBehavior} */
     stackNextByDefault?: boolean;
     allowsNavigation?: boolean;
 }
@@ -42,12 +51,16 @@ export interface ModalOptions {
  * Modal with all options: https://files.catbox.moe/c8qxt0.png
  */
 export interface ModalProps extends PropsWithChildren<ModalPropsRender> {
-    size?: ManaModalProps["size"];
-    paddingSize?: ManaModalProps["paddingSize"];
-    role?: ManaModalProps["role"];
+    size?: "sm" | "md" | "lg" | "xl" | "xxl";
+    paddingSize?: "sm" | "lg";
+    role?: "dialog" | "alertdialog";
     "aria-label"?: string;
 
-    /** Modal animation variant @default "default" */
+    /**
+     * Modal animation variant
+     * - **default**: Modal is scaled with a small fade
+     * - **subtle**: Modal only fades in and out
+     */
     animationVariant?: "default" | "subtle";
     /** Maximum height mode @default "default" */
     maxHeight?: "default" | "viewport";

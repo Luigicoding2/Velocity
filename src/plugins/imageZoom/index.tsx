@@ -23,7 +23,7 @@ import { Devs } from "@utils/constants";
 import { Logger } from "@utils/Logger";
 import definePlugin, { OptionType } from "@utils/types";
 import { createRoot, Menu } from "@webpack/common";
-import type { JSX } from "react";
+import type { FunctionComponentElement, JSX, MouseEvent } from "react";
 import type { Root } from "react-dom/client";
 
 import { Magnifier, MagnifierProps } from "./components/Magnifier";
@@ -213,11 +213,11 @@ export default definePlugin({
 
     settings,
     contextMenus: {
-        "image-context": imageContextMenuPatch
+        "image-context": { render: imageContextMenuPatch, required: true }
     },
 
     // to stop from rendering twice /shrug
-    currentMagnifierElement: null as React.FunctionComponentElement<MagnifierProps & JSX.IntrinsicAttributes> | null,
+    currentMagnifierElement: null as FunctionComponentElement<MagnifierProps & JSX.IntrinsicAttributes> | null,
     element: null as HTMLDivElement | null,
 
     Magnifier,
@@ -226,7 +226,7 @@ export default definePlugin({
         return {
             onMouseOver: () => this.onMouseOver(instance),
             onMouseOut: () => this.onMouseOut(instance),
-            onMouseDown: (e: React.MouseEvent) => this.onMouseDown(e, instance),
+            onMouseDown: (e: MouseEvent) => this.onMouseDown(e, instance),
             onMouseUp: () => this.onMouseUp(instance),
             id: instance.props.id
         };
@@ -263,7 +263,7 @@ export default definePlugin({
     onMouseOut(instance) {
         instance.setState((state: any) => ({ ...state, mouseOver: false }));
     },
-    onMouseDown(e: React.MouseEvent, instance) {
+    onMouseDown(e: MouseEvent, instance) {
         if (e.button === 0 /* left */)
             instance.setState((state: any) => ({ ...state, mouseDown: true }));
     },

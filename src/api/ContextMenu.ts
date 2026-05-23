@@ -20,6 +20,8 @@ import { Logger } from "@utils/Logger";
 import { Menu, React } from "@webpack/common";
 import type { ReactElement } from "react";
 
+import { Settings } from "./Settings";
+
 export type ContextMenuButtonData = {
     menus: ContextMenuDef;
 };
@@ -191,14 +193,7 @@ export function _usePatchContextMenu(props: ContextMenuProps) {
         for (const { patch, pluginName, required } of contextMenuPatches) {
             if (pluginName) {
                 const entry = ContextMenuButtonMap.get(pluginName);
-                if (entry) {
-                    if (!required) {
-
-                        const { Settings } = require("@api/Settings");
-                        const uiSettings = Settings.uiElements.contextMenuButtons;
-                        if (uiSettings[pluginName]?.enabled === false) continue;
-                    }
-                }
+                if (entry && !required && Settings.uiElements.contextMenuButtons[pluginName]?.enabled === false) continue;
             }
             try {
                 patch(props.children, ...props.contextMenuAPIArguments);

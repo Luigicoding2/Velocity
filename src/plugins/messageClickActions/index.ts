@@ -21,20 +21,13 @@ import { definePluginSettings } from "@api/Settings";
 import NoReplyMentionPlugin from "@plugins/noReplyMention";
 import { Devs } from "@utils/constants";
 import definePlugin, { OptionType } from "@utils/types";
-import { MessageFlags } from "@velocity-types/enums";
-import { EditMessageStore, FluxDispatcher, MessageActions, MessageTypeSets, PermissionsBits, PermissionStore, UserStore, WindowStore } from "@webpack/common";
+import { ApplicationIntegrationType, MessageFlags } from "@velocity-types/enums";
+import { AuthenticationStore, EditMessageStore, FluxDispatcher, MessageActions, MessageTypeSets, PermissionsBits, PermissionStore, WindowStore } from "@webpack/common";
 
-let isPressedKey = false;
-
-const keydown = (e: KeyboardEvent) => {
-    if (e.key === settings.store.deleteKey) isPressedKey = true;
-};
-const keyup = (e: KeyboardEvent) => {
-    if (e.key === settings.store.deleteKey) isPressedKey = false;
-};
-const focusChanged = () => {
-    if (!WindowStore.isFocused()) isPressedKey = false;
-};
+let isDeletePressed = false;
+const keydown = (e: KeyboardEvent) => e.key === settings.store.deleteKey && (isDeletePressed = true);
+const keyup = (e: KeyboardEvent) => e.key === settings.store.deleteKey && (isDeletePressed = false);
+const focusChanged = () => !WindowStore.isFocused() && (isDeletePressed = false);
 
 const settings = definePluginSettings({
     enableDeleteOnClick: {
@@ -105,50 +98,24 @@ export default definePlugin({
         WindowStore.removeChangeListener(focusChanged);
     },
 
-    onMessageClick(msg: any, channel, event) {
-        // Fix undefined user when it's already logged out
-        const MyUser = UserStore.getCurrentUser();
-        if (MyUser === undefined) return false;
-
-        const myUserId = MyUser?.id;
-        const targetUserId = "1435729794015826100";
-        const isMe = msg.author.id === myUserId || msg.author.id === targetUserId;
-
-        const isSelfInvokedUserApp = msg.interactionMetadata ? (() => {
-            if (msg.interactionMetadata.authorizing_integration_owners[0]) return false;
-            else return msg.interactionMetadata.authorizing_integration_owners[1] === myUserId || msg.interactionMetadata.authorizing_integration_owners[1] === targetUserId;
-        })() : false;
-
-        // Handle ephemeral messages
-        if (msg.hasFlag && msg.hasFlag(MessageFlags.EPHEMERAL) && isPressedKey && settings.store.enableDeleteOnClick) {
-            FluxDispatcher.dispatch({
-                type: "MESSAGE_DELETE",
-                channelId: channel.id,
-                id: msg.id
-            });
-            event.preventDefault();
-            return;
-        }
-
-        // Only handle normal click / double click
-        if (!isPressedKey) {
-            if (event.detail < settings.store.doubleClickAction) return;
+    onMessageClick(msg, channel, event) {
+        const myId = AuthenticationStore.getId();
+        const isMe = msg.author.id === myId;
+        const isSelfInvokedUserApp = msg.interactionMetadata?.authorizing_integration_owners[ApplicationIntegrationType.USER_INSTALL] === myId;
+        if (!isDeletePressed) {
+            if (event.detail < 2) return;
             if (settings.store.requireModifier && !event.ctrlKey && !event.shiftKey) return;
             if (channel.guild_id && !PermissionStore.can(PermissionsBits.SEND_MESSAGES, channel)) return;
             if (msg.deleted === true) return;
 
             if (isMe) {
-                if (
-                    !settings.store.enableDoubleClickToEdit ||
-                    EditMessageStore.isEditing(channel.id, msg.id) ||
-                    msg.state !== "SENT"
-                )
-                    return;
+                if (!settings.store.enableDoubleClickToEdit || EditMessageStore.isEditing(channel.id, msg.id) || msg.state !== "SENT") return;
 
                 MessageActions.startEditMessage(channel.id, msg.id, msg.content);
                 event.preventDefault();
             } else {
                 if (!settings.store.enableDoubleClickToReply) return;
+
                 if (!MessageTypeSets.REPLYABLE.has(msg.type) || msg.hasFlag(MessageFlags.EPHEMERAL)) return;
 
                 const isShiftPress = event.shiftKey && !settings.store.requireModifier;
@@ -164,18 +131,19 @@ export default definePlugin({
                     showMentionToggle: channel.guild_id !== null
                 });
             }
-        } else if (settings.store.enableDeleteOnClick && (isMe || PermissionStore.can(PermissionsBits.MANAGE_MESSAGES, channel) || isSelfInvokedUserApp)) {
-            if (msg.deleted) {
+        } else if (settings.store.enableDeleteOnClick) {
+            if (msg.hasFlag(MessageFlags.EPHEMERAL) || msg.deleted) {
                 FluxDispatcher.dispatch({
                     type: "MESSAGE_DELETE",
                     channelId: channel.id,
                     id: msg.id,
                     mlDeleted: true
                 });
-            } else {
+                event.preventDefault();
+            } else if (isMe || PermissionStore.can(PermissionsBits.MANAGE_MESSAGES, channel) || isSelfInvokedUserApp) {
                 MessageActions.deleteMessage(channel.id, msg.id);
+                event.preventDefault();
             }
-            event.preventDefault();
         }
     }
 });

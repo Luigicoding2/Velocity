@@ -26,11 +26,6 @@ import definePlugin, { type IconComponent, OptionType } from "@utils/types";
 import { FluxDispatcher, Menu } from "@webpack/common";
 
 const settings = definePluginSettings({
-    contextMenu: {
-        type: OptionType.BOOLEAN,
-        description: "Add option to toggle the functionality in the chat input context menu",
-        default: true
-    },
     isEnabled: {
         type: OptionType.BOOLEAN,
         description: "Toggle functionality",
@@ -75,14 +70,13 @@ const SilentTypingIcon: IconComponent = ({ height = 20, width = 20, className, e
 
 const SilentTypingToggle: ChatBarButtonFactory = ({ isMainChat }) => {
     const { isEnabled } = settings.use(["isEnabled"]);
-    const toggle = () => settings.store.isEnabled = !settings.store.isEnabled;
 
     if (!isMainChat) return null;
 
     return (
         <ChatBarButton
             tooltip={isEnabled ? "Disable Silent Typing" : "Enable Silent Typing"}
-            onClick={toggle}
+            onClick={() => settings.store.isEnabled = !settings.store.isEnabled}
         >
             <SilentTypingIcon enabled={isEnabled} />
         </ChatBarButton>
@@ -91,8 +85,7 @@ const SilentTypingToggle: ChatBarButtonFactory = ({ isMainChat }) => {
 
 
 const ChatBarContextCheckbox: NavContextMenuPatchCallback = children => {
-    const { isEnabled, contextMenu } = settings.use(["isEnabled", "contextMenu"]);
-    if (!contextMenu) return;
+    const { isEnabled } = settings.use(["isEnabled"]);
 
     const group = findGroupChildrenByChildId("submit-button", children);
 

@@ -1,6 +1,24 @@
 import type { ButtonVariant, Channel, Guild, GuildMember, Message, MessageAttachment, Poll, User, PostPayloads, GetPayloads } from ".";
 import type { ReactNode } from "react";
-import type { LiteralUnion } from "type-fest";
+import type { CamelCasedProperties, LiteralUnion, SnakeCasedProperties } from "type-fest";
+
+/**
+ * Merges a type with both its camelCase and snake_case property variants.
+ * Use when you need a store-style type (camelCase) to also accept API-style (snake_case) props.
+ *
+ * @example
+ * type Both = BothCases<User["avatarDecorationData"]>;
+ * // Both now has skuId AND sku_id, expiresAt AND expires_at, etc.
+ */
+export type BothCases<T extends object> = T & CamelCasedProperties<T> & SnakeCasedProperties<T>;
+
+/**
+ * Converts a type of camelCase to API-style (snake_case)
+ * @example
+ * type ApiUser = ToApi<User>
+ * // ApiUser now only has premium_state, premium_usage_flags, public_flags, etc.
+ */
+export type ToApi<T extends object> = SnakeCasedProperties<T>;
 
 import type { FluxEvents } from "./fluxEvents";
 import type { ApplicationCommandOptionType, ChannelType, PremiumType } from "../enums";
@@ -190,19 +208,6 @@ export interface Locale {
     localizedName: string;
 }
 
-export interface LocaleInfo {
-    code: string;
-    enabled: boolean;
-    name: string;
-    englishName: string;
-    postgresLang: string;
-}
-
-export interface Clipboard {
-    copy(text: string): void;
-    SUPPORTS_COPY: boolean;
-}
-
 export interface NavigationRouter {
     back(): void;
     forward(): void;
@@ -216,10 +221,10 @@ export interface ChannelRouter {
 }
 
 export interface IconUtils {
-    getUserAvatarURL(user: User, canAnimate?: boolean, size?: number, format?: string): string;
+    getUserAvatarURL(user: { id: string; avatar?: ?string; }, canAnimate?: boolean, size?: number, format?: string): string;
     getDefaultAvatarURL(id: string, discriminator?: string): string;
     getUserBannerURL(data: { id: string, banner: string, canAnimate?: boolean, size: number; }): string | undefined;
-    getAvatarDecorationURL(data: { avatarDecoration: User["avatarDecoration"], size: number; canAnimate?: boolean; }): string | undefined;
+    getAvatarDecorationURL(data: { avatarDecoration: User["avatarDecoration"] | ToApi<NonNullable<User["avatarDecoration"]>>; size: number; canAnimate?: boolean; }): string | undefined;
 
     getGuildMemberAvatarURL(member: GuildMember, canAnimate?: string): string | null;
     getGuildMemberAvatarURLSimple(data: { guildId: string, userId: string, avatar: string, canAnimate?: boolean; size?: number; }): string;
@@ -261,8 +266,8 @@ export interface IconUtils {
 
 export interface Constants {
     Endpoints: Record<string, any>;
-    UserFlags: Record<string, number>;
     FriendsSections: Record<string, string>;
+    UserFlags: Record<string, number>;
 }
 
 export type ActiveView = LiteralUnion<"emoji" | "gif" | "sticker" | "soundboard", string>;
@@ -485,7 +490,7 @@ export interface MessageActionCreators {
     sendGreetMessage(channelId: string, stickerId: string, options?: any): Promise<any>;
     sendPollMessage(channelId: string, poll: any, options?: Poll): void;
     validateMessage(emojis: any[], user: User, channelId: string): { errorMessage: string; errorMessageName: string; };
-    startEditMessage(channelId: string, messageId: string, options: { content?: string; components?: any[]; }): Promise<any>;
+    startEditMessage(channelId: string, messageId: string, content?: string, source?: string): Promise<any>;
     editMessage(channelId: string, messageId: string, options: { content?: string; components?: any[]; }): Promise<any>;
     suppressEmbeds(channelId: string, messageId: string): Promise<void>;
     patchMessageGuildOfficial(channelId: string, messageId: string, isOfficial: boolean): Promise<void>;

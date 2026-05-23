@@ -2,8 +2,9 @@
 export * from "./hypesquad-online";
 export * from "./users-me-profile";
 export * from "./users-me-settings";
+export * from "./virtual-currency-skus-redeem";
 
-import type { HypeSquadOnlinePayload, UserMeProfileGetResponse, UserMeProfilePayload, UserMeSettingsGetResponse, UserMeSettingsPayload } from "..";
+import type { HypeSquadOnlinePayload, UserMeProfileGetResponse, UserMeProfilePayload, UserMeSettingsGetResponse, UserMeSettingsPayload, VirtualCurrencySkusRedeemPayload, VirtualCurrencySkusRedeemGetResponse } from "..";
 
 /**
  * If you want to contribute to endpoints or add more Discord endpoints, follow these rules:
@@ -13,10 +14,11 @@ import type { HypeSquadOnlinePayload, UserMeProfileGetResponse, UserMeProfilePay
  * - 4. Do NOT type fields as "any" or "unknown". RestAPI velocity types must include **ALL** fields and params.
  * - 5. **IMPORTANT** Make sure your types are API-based, not JSON-based
  */
-export type PostPayloads = HypeSquadOnlinePayload | UserMeProfilePayload | UserMeSettingsPayload;
+export type PostPayloads = HypeSquadOnlinePayload | UserMeProfilePayload | UserMeSettingsPayload | VirtualCurrencySkusRedeemPayload;
 
 export type GetPayloads<TUrl extends string> =
     TUrl extends `/users/${string}/profile` ? UserMeProfileGetResponse :
-    TUrl extends "/users/@me/settings" ? UserMeSettingsGetResponse :
+    TUrl extends `/users/${string}/settings` ? UserMeSettingsGetResponse :
+    TUrl extends `/users/${string}/profile` ? VirtualCurrencySkusRedeemGetResponse :
     { [key: string]: any; };
 

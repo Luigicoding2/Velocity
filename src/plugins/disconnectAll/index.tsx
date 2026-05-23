@@ -20,7 +20,7 @@ import { findGroupChildrenByChildId, type NavContextMenuPatchCallback } from "@a
 import { Devs } from "@utils/constants";
 import { Logger } from "@utils/Logger";
 import definePlugin from "@utils/types";
-import { Menu, PermissionsBits, PermissionStore, RestAPI, Toasts, VoiceStateStore } from "@webpack/common";
+import { Constants, Menu, PermissionsBits, PermissionStore, RestAPI, showToast, Toasts, VoiceStateStore } from "@webpack/common";
 
 const disconnectAllPatch: NavContextMenuPatchCallback = (children, props) => {
     if (!props.channel.isGuildVoice()) return;
@@ -43,7 +43,7 @@ const disconnectAllPatch: NavContextMenuPatchCallback = (children, props) => {
                     for (const userId in voiceStates) {
                         try {
                             await RestAPI.patch({
-                                url: `/guilds/${props.channel.guild_id}/members/${userId}`,
+                                url: Constants.Endpoints.GUILD_MEMBER(props.channel.guild_id, userId),
                                 body: { channel_id: null }
                             });
                             disconnectedCount++;
@@ -52,11 +52,7 @@ const disconnectAllPatch: NavContextMenuPatchCallback = (children, props) => {
                         }
                     }
                     if (disconnectedCount > 0) {
-                        Toasts.show({
-                            message: `Disconnected ${disconnectedCount} users`,
-                            id: Toasts.genId(),
-                            type: Toasts.Type.SUCCESS
-                        });
+                        showToast(`Disconnected ${disconnectedCount} users`, Toasts.Type.SUCCESS);
                     }
                 }}
             />
@@ -71,6 +67,6 @@ export default definePlugin({
     authors: [Devs.RoScripter999],
 
     contextMenus: {
-        "channel-context": disconnectAllPatch
+        "channel-context": { render: disconnectAllPatch, required: true }
     }
 });
