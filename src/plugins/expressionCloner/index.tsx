@@ -27,7 +27,7 @@ import definePlugin from "@utils/types";
 import type { Guild, GuildSticker } from "@velocity-types";
 import { StickerFormatType } from "@velocity-types/enums";
 import { findByCodeLazy } from "@webpack";
-import { Constants, EmojiStore, FluxDispatcher, Forms, GuildStore, IconUtils, Menu, Modal, openModalLazy, PermissionsBits, PermissionStore, RestAPI, StickersStore, TextInput, Toasts, Tooltip, useMemo, useReducer, UserStore, useState } from "@webpack/common";
+import { Constants, EmojiStore, FluxDispatcher, GuildStore, IconUtils, Menu, Modal, openModalLazy, PermissionsBits, PermissionStore, RestAPI, StickersStore, TextInput, Toasts, Tooltip, useMemo, useReducer, UserStore, useState } from "@webpack/common";
 import type { Promisable } from "type-fest";
 
 const uploadEmoji = findByCodeLazy(".GUILD_EMOJIS(", "EMOJI_UPLOAD_START");
@@ -236,13 +236,12 @@ function CloneModal({ data }: { data: Sticker | Emoji; }) {
 
     return (
         <>
-            <Forms.FormTitle>Custom Name</Forms.FormTitle>
-
             <TextInput
+                label="Custom Name"
                 value={name}
                 onChange={handleNameChange}
                 error={error}
-            />;
+            />
             <div style={{
                 display: "flex",
                 flexWrap: "wrap",
