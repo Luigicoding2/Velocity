@@ -34,9 +34,8 @@ const Modes: Record<string, string> = {
     colors: `data:text/html,${encodeURIComponent(colorsHtml)}`
 };
 
-function getMode() {
-    const Plugin = RendererSettings.store.plugins?.StreamCrasher as unknown as typeof import("./index");
-    return Plugin.settings.store.crashMode;
+function getMode(): string {
+    return RendererSettings.store.plugins?.StreamCrasher?.crashMode;
 }
 
 export async function createCrashSource(_e: IpcMainInvokeEvent): Promise<string | null> {

@@ -8,8 +8,14 @@ export namespace UploadAttachmentStore {
         spoiler: boolean;
         isThumbnail?: boolean;
         isImage?: boolean;
+        isVideo?: boolean;
+        mimeType?: string;
+        status?: string;
+        uploadedFilename?: string;
         item: {
             file: File;
+            platform?: number;
+            origin?: string;
         };
         upload(): void;
         removeFromMsgDraft(): void;
