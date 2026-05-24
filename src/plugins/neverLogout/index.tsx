@@ -186,8 +186,8 @@ export default definePlugin({
         {
             find: "UserSettingsRoot_buildLayout",
             replacement: {
-                match: /(?<=\i\.\i\.UTILITY_SECTION,\{buildLayout:\(\)=>\[)(\i(?:,\i)*\])/,
-                replace: "$self.NeverLogoutSidebar(),$1"
+                match: /(?<=\i\.\i\.UTILITY_SECTION,\{buildLayout:\(\)=>\[)(\i(?:,\i)*)(\])/,
+                replace: "$1,$self.NeverLogoutSidebar()$2"
             }
         }
     ],
