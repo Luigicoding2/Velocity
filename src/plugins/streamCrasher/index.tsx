@@ -207,7 +207,8 @@ export default definePlugin({
     flux: {
         MEDIA_ENGINE_SET_GO_LIVE_SOURCE(data) {
             const sourceId = data.settings?.desktopSettings?.sourceId;
-            if (sourceId && sourceId !== "" && setLastSourceId(sourceId) && settings.store.isEnabled)
+            const qualityOptions = data.settings?.qualityOptions;
+            if (sourceId && sourceId !== "" && setLastSourceId(sourceId, qualityOptions) && settings.store.isEnabled)
                 updateStream(true);
         },
         STREAM_STOP() {

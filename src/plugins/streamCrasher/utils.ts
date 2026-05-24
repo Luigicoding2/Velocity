@@ -20,6 +20,7 @@ import type { PluginNative } from "@utils/types";
 import { ApplicationStreamingStore, VoiceActions } from "@webpack/common";
 
 export let lastSourceId: string | null = null;
+let lastQualityOptions: { preset?: number; resolution?: number; frameRate?: number; } | null = null;
 let crashSourceId: string | null = null;
 let currentUpdate: Promise<void> | null = null;
 let pendingState: boolean | null = null;
@@ -31,9 +32,10 @@ export function setCrashMode() {
 }
 
 /** returns true if the source was actually saved.. */
-export function setLastSourceId(sourceId: string | null): boolean {
+export function setLastSourceId(sourceId: string | null, qualityOptions?: any): boolean {
     if (!sourceId || sourceId === crashSourceId) return false;
     lastSourceId = sourceId;
+    if (qualityOptions) lastQualityOptions = qualityOptions;
     return true;
 }
 
@@ -66,7 +68,7 @@ async function doUpdateStream(isEnabled: boolean) {
 
         VoiceActions.setGoLiveSource({
             desktopSettings: { sourceId, sound: false },
-            qualityOptions: { preset: 2, resolution: 0, frameRate: 60 },
+            qualityOptions: isEnabled ? { preset: 2, resolution: 0, frameRate: 60 } : (lastQualityOptions ?? { preset: 2, resolution: 0, frameRate: 60 }),
             context: "stream"
         });
 
