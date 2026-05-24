@@ -1,4 +1,4 @@
-import type { ButtonVariant, Channel, Guild, GuildMember, Message, MessageAttachment, Poll, User, PostPayloads, GetPayloads } from ".";
+import type { ButtonVariant, Channel, Guild, GuildMember, Message, MessageAttachment, Poll, User, PostPayloads, GetPayloads, UserSettingsKeys } from ".";
 import type { ReactNode } from "react";
 import type { CamelCasedProperties, LiteralUnion, SnakeCasedProperties } from "type-fest";
 
@@ -208,6 +208,11 @@ export interface Locale {
     localizedName: string;
 }
 
+export interface SettingsRouter {
+    get USER_SETTINGS_MODAL_KEY(): "USER_SETTINGS_MODAL_MODAL_KEY";
+    openUserSettings(target?: UserSettingsKeys | LiteralUnion<`velocity_${string}`, never>): Promise<void>;
+}
+
 export interface NavigationRouter {
     back(): void;
     forward(): void;
@@ -291,8 +296,6 @@ export interface ExpressionPickerStore {
     useExpressionPickerStore(): ExpressionPickerStoreState;
     useExpressionPickerStore<T>(selector: (state: ExpressionPickerStoreState) => T): T;
 }
-
-export { BrowserWindowFeatures, PopoutActions } from "./stores/PopoutWindowStore";
 
 export type UserNameUtilsTagInclude = LiteralUnion<"auto" | "always" | "never", string>;
 export interface UserNameUtilsTagOptions {

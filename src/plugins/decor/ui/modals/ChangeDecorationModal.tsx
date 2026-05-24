@@ -18,6 +18,7 @@
 
 import { Flex } from "@components/Flex";
 import { Margins } from "@components/margins";
+import { Paragraph } from "@components/Paragraph";
 import { Decoration, getPresets, Preset } from "@plugins/decor/lib/api";
 import { GUILD_ID, INVITE_KEY } from "@plugins/decor/lib/constants";
 import { useAuthorizationStore } from "@plugins/decor/lib/stores/AuthorizationStore";
@@ -92,9 +93,9 @@ function SectionHeader({ section }: SectionHeaderProps) {
             />}
         </Flex>
         {hasSubtitle &&
-            <Forms.FormText className={Margins.bottom8}>
+            <Paragraph className={Margins.bottom8}>
                 {section.subtitle}
-            </Forms.FormText>
+            </Paragraph>
         }
     </div>;
 }

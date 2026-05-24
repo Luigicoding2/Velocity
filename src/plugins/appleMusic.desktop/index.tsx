@@ -17,11 +17,12 @@
 */
 
 import { definePluginSettings } from "@api/Settings";
+import { Paragraph } from "@components/Paragraph";
 import { Devs, IS_MAC } from "@utils/constants";
 import definePlugin, { OptionType, type PluginNative, ReporterTestable } from "@utils/types";
 import type { Activity, ActivityAssets, ActivityButton } from "@velocity-types";
 import { ActivityFlags, ActivityStatusDisplayType, ActivityType } from "@velocity-types/enums";
-import { ApplicationAssetUtils, FluxDispatcher, Forms } from "@webpack/common";
+import { ApplicationAssetUtils, FluxDispatcher } from "@webpack/common";
 
 const Native = VelocityNative.pluginHelpers.AppleMusicRichPresence as PluginNative<typeof import("./native")>;
 
@@ -173,10 +174,10 @@ export default definePlugin({
 
     settingsAboutComponent() {
         return <>
-            <Forms.FormText>
+            <Paragraph>
                 For the customizable activity format strings, you can use several special strings to include track data in activities!{" "}
                 <code>{"{name}"}</code> is replaced with the track name; <code>{"{artist}"}</code> is replaced with the artist(s)' name(s); and <code>{"{album}"}</code> is replaced with the album name.
-            </Forms.FormText>
+            </Paragraph>
         </>;
     },
 

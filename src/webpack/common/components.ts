@@ -16,7 +16,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import { Paragraph } from "@components/Paragraph";
 import { LazyComponent } from "@utils/lazyReact";
 import type * as t from "@velocity-types";
 import { filters, find, findCssClassesLazy, mapMangledCssClasses, mapMangledModuleLazy, proxyLazyWebpack, waitFor } from "@webpack";
@@ -36,8 +35,7 @@ export function setIcons(component: t.Icons) {
 export const Forms: t.Forms = {
     FormTitle: waitForComponent("FormTitle", filters.componentByCode('="legend"===', '="h5"')),
     FormDivider: waitForComponent("FormDivider", filters.componentByCode("{className:", /marginTop:\i/)),
-    FormSection: waitForComponent("FormSection", filters.componentByCode("data-migration-pending", "titleId:", "errorId:", "isFocused:")),
-    FormText: Paragraph
+    FormSection: waitForComponent("FormSection", filters.componentByCode("data-migration-pending", "titleId:", "errorId:", "isFocused:"))
 };
 
 export const Buttons: t.Buttons = {
@@ -71,7 +69,12 @@ export const Paginator = waitForComponent<t.Paginator>("Paginator", filters.comp
 export const Clickable = waitForComponent<t.Clickable>("Clickable", filters.componentByCode("this.context?this.renderNonInteractive():"));
 export const Avatar = waitForComponent<t.Avatar>("Avatar", filters.componentByCode(".size-1.375*"));
 
-export const FilePicker = waitForComponent<t.FilePicker>("FilePicker", filters.componentByCode(".currentTarget.files", "lineClamp:1"));
+export let FilePicker: t.FilePicker;
+export function setFilePicker(component: t.FilePicker) {
+    if (component) {
+        FilePicker = component;
+    }
+}
 
 export let ColorPicker: t.ColorPicker = () => null;
 export function setColorPicker(component: t.ColorPicker) {

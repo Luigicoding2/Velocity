@@ -20,11 +20,11 @@ import { definePluginSettings } from "@api/Settings";
 import { getUserSettingLazy } from "@api/UserSettings";
 import ErrorBoundary from "@components/ErrorBoundary";
 import { Flex } from "@components/Flex";
-import { Margins } from "@components/margins";
+import { Paragraph } from "@components/Paragraph";
 import CustomRpcPlugin from "@plugins/customRPC";
 import { Devs } from "@utils/constants";
 import definePlugin, { OptionType } from "@utils/types";
-import { Buttons, Forms, RunningGameStore, showToast, TextInput, Toasts, Tooltip, useEffect, useState } from "@webpack/common";
+import { Buttons, RunningGameStore, showToast, TextInput, Toasts, Tooltip, useEffect, useState } from "@webpack/common";
 
 const enum ActivitiesTypes {
     Game,
@@ -92,7 +92,7 @@ function recalculateActivities() {
 function ImportCustomRPCComponent() {
     return (
         <Flex flexDirection="column">
-            <Forms.FormText>Import the application id of the CustomRPC plugin to the filter list</Forms.FormText>
+            <Paragraph>Import the application id of the CustomRPC plugin to the filter list</Paragraph>
             <div>
                 <Buttons.Button
                     text="Import CustomRPC ID"
@@ -141,9 +141,9 @@ function IdsListComponent(props: { setValue: (value: string) => void; }) {
 
     return (
         <section>
-            <Forms.FormTitle tag="h3">Filter List</Forms.FormTitle>
-            <Forms.FormText className={Margins.bottom8}>Comma separated list of activity IDs to filter (Useful for filtering specific RPC activities and CustomRPC</Forms.FormText>
             <TextInput
+                label="Filter List"
+                description="Comma separated list of activity IDs to filter (Useful for filtering specific RPC activities and CustomRPC"
                 type="text"
                 value={idsList}
                 onChange={handleChange}

@@ -18,6 +18,7 @@
 
 import { ErrorCard } from "@components/ErrorBoundary";
 import { Margins } from "@components/margins";
+import { Paragraph } from "@components/Paragraph";
 import { Devs, IS_LINUX } from "@utils/constants";
 import { Logger } from "@utils/Logger";
 import { wordsToTitle } from "@utils/text";
@@ -245,13 +246,13 @@ export default definePlugin({
 
         return (
             <section>
-                <Forms.FormText className={Margins.bottom8}>
+                <Paragraph className={Margins.bottom8}>
                     You can customise the spoken messages below. You can disable specific messages by setting them to nothing.
-                </Forms.FormText>
-                <Forms.FormText>
+                </Paragraph>
+                <Paragraph>
                     The special placeholders <code>{"{{USER}}"}</code>, <code>{"{{DISPLAY_NAME}}"}</code>, <code>{"{{NICKNAME}}"}</code> and <code>{"{{CHANNEL}}"}</code>{" "}
                     will be replaced with the user's name (nothing if it's yourself), the user's display name, the user's nickname on current server and the channel's name respectively
-                </Forms.FormText>
+                </Paragraph>
                 {hasEnglishVoices && (
                     <>
                         <Forms.FormTitle className={Margins.top20} tag="h3">Play Example Sounds</Forms.FormTitle>

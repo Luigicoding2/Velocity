@@ -19,8 +19,8 @@
 import type { MessageObject } from "@api/MessageEvents";
 import type { Channel, CloudUpload, Guild, GuildFeatures, IntlKeys, MediaModalItem, MediaModalProps, Message, User } from "@velocity-types";
 import { Theme } from "@velocity-types/enums";
-import { findStoreLazy } from "@webpack";
-import { ChannelActionCreators, ChannelStore, ComponentDispatch, Constants, FluxDispatcher, GuildStore, i18n, IconUtils, InviteActions, MessageActions, openMediaModal, RestAPI, SelectedChannelStore, SelectedGuildStore, Toasts, UserProfileActions, UserProfileStore, UserSettingsActionCreators, UserUtils } from "@webpack/common";
+import { findLazy, findStoreLazy } from "@webpack";
+import { ChannelActionCreators, ChannelStore, ComponentDispatch, Constants, FluxDispatcher, GuildStore, i18n, IconUtils, InviteActions, MessageActions, openMediaModal, RestAPI, SelectedChannelStore, SelectedGuildStore, Toasts, UserProfileActions, UserProfileStore, UserUtils } from "@webpack/common";
 import type { Except } from "type-fest";
 
 import { copyToClipboard } from "./clipboard";
@@ -116,7 +116,7 @@ export function openPrivateChannel(userId: string) {
 
 export function getTheme(): Theme {
     try {
-        return UserSettingsActionCreators.PreloadedUserSettingsActionCreators.getCurrentValue()?.appearance?.theme;
+        return findLazy(m => m.ProtoClass?.typeName?.endsWith(".PreloadedUserSettings")).getCurrentValue()?.appearance?.theme;
     } catch {
         return Theme.DARK;
     }

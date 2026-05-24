@@ -21,7 +21,7 @@ import { ErrorCard } from "@components/ErrorBoundary";
 import { Flex } from "@components/Flex";
 import { SectionHeader } from "@components/settings";
 import { identity } from "@utils/misc";
-import { Buttons, Forms, Icons, Modal, openModal, Select, Slider, Text } from "@webpack/common";
+import { Buttons, Forms, Icons, Modal, openModal, Select, Slider } from "@webpack/common";
 
 export function NotificationSection() {
     return (
@@ -57,17 +57,16 @@ function NotificationSettings() {
     const isDesktopDisabled = settings.useNative === "always";
 
     return (
-        <div style={{ padding: "1em 0", display: "flex", flexDirection: "column", gap: "var(--space-24)" }}>
+        <Flex flexDirection="column" gap="var(--space-24)">
 
             {settings.useNative !== "never" && Notification?.permission === "denied" && (
-                <ErrorCard style={{ padding: "1em" }}>
-                    <Flex alignItems="center" gap={8}>
-                        <Icons.WarningIcon color="currentColor" size="sm" />
-                        <div>
-                            <Text tag="h5" variant="text-sm/semibold">Desktop notifications blocked</Text>
-                            <Forms.FormText>You have denied notification permissions. Desktop notifications will not work.</Forms.FormText>
-                        </div>
-                    </Flex>
+                <ErrorCard>
+                    <SectionHeader
+                        tag="h5"
+                        title="Desktop notifications blocked"
+                        description="You have denied notification permissions. Desktop notifications will not work."
+                        icon={() => <Icons.WarningIcon color="currentColor" size="sm" />}
+                    />
                 </ErrorCard>
             )}
 
@@ -162,7 +161,6 @@ function NotificationSettings() {
                     onMarkerRender={v => v === 200 ? "∞" : v}
                 />
             </section>
-
-        </div>
+        </Flex>
     );
 }

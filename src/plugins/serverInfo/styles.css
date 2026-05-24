@@ -24,12 +24,6 @@
     cursor: pointer;
 }
 
-.vc-gp-name-and-description {
-    display: flex;
-    flex-direction: column;
-    gap: 0.2em;
-}
-
 .vc-gp-name {
     margin: 0;
 }

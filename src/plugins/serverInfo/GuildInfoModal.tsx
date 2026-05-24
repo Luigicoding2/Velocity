@@ -18,6 +18,7 @@
 
 import "./styles.css";
 
+import { SectionHeader } from "@components/settings";
 import { classNameFactory } from "@utils/css";
 import { getGuildAcronym, openImageModal, openUserProfile } from "@utils/discord";
 import { classes } from "@utils/misc";
@@ -88,27 +89,32 @@ function GuildInfoModal({ guild, modalProps }: GuildProps & { modalProps: ModalP
         <Modal
             {...modalProps}
             size="lg"
-            title={
-                <div className={cl("header")}>
-                    {iconUrl
-                        ? <img
-                            className={cl("icon")}
-                            src={iconUrl}
-                            alt=""
-                            onClick={() => openImageModal({
-                                url: iconUrl,
-                                height: 512,
-                                width: 512
-                            })}
-                        />
-                        : <div aria-hidden className={classes(IconClasses.childWrapper, IconClasses.acronym)}>{getGuildAcronym(guild)}</div>
-                    }
-
-                    <div className={cl("name-and-description")}>
-                        <Forms.FormTitle tag="h5" className={cl("name")}>{guild.name}</Forms.FormTitle>
-                        {guild.description && <Forms.FormText>{guild.description}</Forms.FormText>}
+            title={<SectionHeader
+                tag="h5"
+                layout="horizontal"
+                title={guild?.name}
+                description={guild?.description || undefined}
+                icon={() => (
+                    <div className={cl("header")}>
+                        {iconUrl ? (
+                            <img
+                                className={cl("icon")}
+                                src={iconUrl}
+                                alt=""
+                                onClick={() => openImageModal({
+                                    url: iconUrl,
+                                    height: 512,
+                                    width: 512
+                                })}
+                            />
+                        ) : (
+                            <div aria-hidden className={classes(IconClasses.childWrapper, IconClasses.acronym)}>
+                                {getGuildAcronym(guild)}
+                            </div>
+                        )}
                     </div>
-                </div>
+                )}
+            />
             }
         >
             {bannerUrl && currentTab === Tabs.ServerInfo && (

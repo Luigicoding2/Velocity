@@ -18,6 +18,8 @@
 
 import { ErrorCard } from "@components/ErrorBoundary";
 import { Margins } from "@components/margins";
+import { Paragraph } from "@components/Paragraph";
+import { SectionHeader } from "@components/settings";
 import { relativeLuminance } from "@plugins/clientTheme/utils/colorUtils";
 import { createOrUpdateThemeColorVars } from "@plugins/clientTheme/utils/styleUtils";
 import { classNameFactory } from "@utils/css";
@@ -77,10 +79,7 @@ export function ThemeSettingsComponent() {
     return (
         <div className={cl("settings")}>
             <div className={cl("container")}>
-                <div className={cl("settings-labels")}>
-                    <Forms.FormTitle tag="h3">Theme Color</Forms.FormTitle>
-                    <Forms.FormText>Add a color to your Discord client theme</Forms.FormText>
-                </div>
+                <SectionHeader tag="h3" title="Theme Color" description="Add a color to your Discord client theme" />
                 <ColorPicker
                     color={parseInt(settings.store.color, 16)}
                     onChange={onPickColor}
@@ -92,8 +91,8 @@ export function ThemeSettingsComponent() {
                 <ErrorCard className={Margins.top8}>
                     <Forms.FormTitle tag="h2">Your theme won't look good!</Forms.FormTitle>
 
-                    {contrastWarning && <Forms.FormText>{">"} Selected color won't contrast well with text</Forms.FormText>}
-                    {nitroThemeEnabled && <Forms.FormText>{">"} Nitro themes aren't supported</Forms.FormText>}
+                    {contrastWarning && <Paragraph>{">"} Selected color won't contrast well with text</Paragraph>}
+                    {nitroThemeEnabled && <Paragraph>{">"} Nitro themes aren't supported</Paragraph>}
 
                     <div className={cl("buttons-container")}>
                         {(contrastWarning && fixableContrast) && <Buttons.Button text={`Switch to ${oppositeTheme} mode`} onClick={() => setDiscordTheme(oppositeTheme)} variant="critical-primary" />}

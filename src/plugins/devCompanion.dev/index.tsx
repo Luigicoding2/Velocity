@@ -52,7 +52,7 @@ export default definePlugin({
     authors: [Devs.Ven, Devs.sadan],
     reporterTestable: ReporterTestable.None,
     settings,
-    startAt: StartAt.Init,
+    startAt: StartAt.WebpackReady,
 
     toolboxActions: {
         Reconnect() {

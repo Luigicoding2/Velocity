@@ -18,6 +18,7 @@
 
 import { FormSwitch } from "@components/FormSwitch";
 import { Margins } from "@components/margins";
+import { Paragraph } from "@components/Paragraph";
 import { Forms, Parser, TextInput, useEffect, useState } from "@webpack/common";
 
 const RegexGuide = {
@@ -74,9 +75,9 @@ export function ReplacementInput({ replacement, setReplacement, replacementError
                     <Forms.FormTitle className={Margins.top8}>Cheat Sheet</Forms.FormTitle>
 
                     {Object.entries(RegexGuide).map(([placeholder, desc]) => (
-                        <Forms.FormText key={placeholder}>
+                        <Paragraph key={placeholder}>
                             {Parser.parse("`" + placeholder + "`")}: {desc}
-                        </Forms.FormText>
+                        </Paragraph>
                     ))}
                 </div>
             )}

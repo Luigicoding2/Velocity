@@ -17,6 +17,7 @@
 */
 
 import { Margins } from "@components/margins";
+import { Paragraph } from "@components/Paragraph";
 import { canonicalizeMatch, canonicalizeReplace } from "@utils/patches";
 import { makeCodeblock } from "@utils/text";
 import { ReplaceFn } from "@utils/types";
@@ -154,9 +155,9 @@ export function PatchPreview({ module, match, replacement, setReplacementError }
             )}
 
             {compileResult && (
-                <Forms.FormText style={{ color: compileResult[0] ? "var(--status-positive)" : "var(--text-feedback-critical, var(--text-danger))" }}>
+                <Paragraph color={compileResult[0] ? "status-positive" : "text-feedback-critical"}>
                     {compileResult[1]}
-                </Forms.FormText>
+                </Paragraph>
             )}
         </>
     );

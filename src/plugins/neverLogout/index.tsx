@@ -25,9 +25,10 @@ import { classNameFactory } from "@utils/css";
 import { getIntlMessage } from "@utils/discord";
 import { useForceUpdater } from "@utils/react";
 import definePlugin, { StartAt } from "@utils/types";
-import type { ModalPropsRender } from "@velocity-types";
+import type { ModalPropsRender, SidebarItemNode } from "@velocity-types";
+import { LayoutType } from "@velocity-types/enums";
 import { findByPropsLazy } from "@webpack";
-import { Avatar, Buttons, closeAllModals, HelpMessage, Icons, IconUtils, Modal, openModal, TextInput, useEffect, UserStore, useState } from "@webpack/common";
+import { Avatar, Buttons, closeAllModals, ConfirmModal, HelpMessage, Icons, IconUtils, Modal, openModal, TextInput, useEffect, UserStore, useState } from "@webpack/common";
 
 import { autoLogin, getSavedTokens, loginToken, removeUser, saveToken } from "./utils";
 
@@ -60,8 +61,7 @@ function LoginModal(modalProps: ModalPropsRender) {
     const isValidToken = tokenRegex.test(token);
 
     return (
-        <Modal title="Auto Login" subtitle="Select an account to switch to" size="lg" {...modalProps}
-        >
+        <Modal title="Auto Login" subtitle="Select an account to switch to" size="lg" {...modalProps}>
             <div className={cl("quick-login")}>
                 <TextInput
                     placeholder="Paste your user token here"
@@ -121,6 +121,22 @@ function LoginButton(array?: boolean) {
         />;
 }
 
+const NeverLogoutSidebar = (): SidebarItemNode => ({
+    key: "neverlogout_logout_sidebar_item",
+    variant: "destructive",
+    type: LayoutType.SIDEBAR_ITEM,
+    useTitle: () => "Go to Login Menu",
+    icon: Icons.DoorExitIcon,
+    buildLayout: () => [],
+    onClick: () => openModal(modalProps => <ConfirmModal
+        {...modalProps}
+        title="Logout"
+        subtitle="Are you sure you wanna logout? This wont log you out of your account."
+        confirmText="Logout"
+        onConfirm={closeSuspendedUser}
+    />)
+});
+
 export default definePlugin({
     name: "NeverLogout",
     description: "Never get logged out of your account (READ DESC)",
@@ -138,6 +154,7 @@ export default definePlugin({
     ),
 
     LoginButton,
+    NeverLogoutSidebar,
 
     patches: [
         {
@@ -163,6 +180,14 @@ export default definePlugin({
             replacement: {
                 match: /(\i)&&this\.startSession\((\w+)\)/,
                 replace: "$1&&this?.startSession?.($2)"
+            }
+        },
+
+        {
+            find: "UserSettingsRoot_buildLayout",
+            replacement: {
+                match: /(?<=\i\.\i\.UTILITY_SECTION,\{buildLayout:\(\)=>\[)(\i(?:,\i)*\])/,
+                replace: "$self.NeverLogoutSidebar(),$1"
             }
         }
     ],

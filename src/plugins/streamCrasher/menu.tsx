@@ -43,7 +43,7 @@ export function CrasherContextMenu({ closePopout, settings }) {
                 {Object.entries(crashModeLabels).map(([value, { value: label, subText }]) => (
                     <Menu.MenuCheckboxItem
                         key={value}
-                        id={`crash-mode-${value}`}
+                        id={value}
                         label={label}
                         subtext={subText}
                         checked={crashMode === value}
@@ -62,19 +62,15 @@ export function CrasherContextMenu({ closePopout, settings }) {
     );
 }
 
-const StreamCrasherPatch: NavContextMenuPatchCallback = children => {
+export const StreamCrasherPatch: NavContextMenuPatchCallback = children => {
     const { isEnabled } = settings.use(["isEnabled"]);
 
     children.splice(3, 0,
         <Menu.MenuCheckboxItem
-            id="stream-crasher-enable"
+            id="stream-crasher-toggle"
             label={isEnabled ? "Disable Crasher" : "Enable Crasher"}
             checked={isEnabled}
             action={() => settings.store.isEnabled = !settings.store.isEnabled}
         />
     );
-};
-
-export const contextMenus = {
-    "manage-streams": StreamCrasherPatch
 };

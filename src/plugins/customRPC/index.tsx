@@ -22,6 +22,8 @@ import { ErrorCard } from "@components/ErrorBoundary";
 import { Flex } from "@components/Flex";
 import { Link } from "@components/Link";
 import { Margins } from "@components/margins";
+import { Paragraph } from "@components/Paragraph";
+import { SectionHeader } from "@components/settings";
 import { RPCSettings } from "@plugins/customRPC/RpcSettings";
 import { Devs } from "@utils/constants";
 import { isTruthy } from "@utils/guards";
@@ -241,9 +243,7 @@ export default definePlugin({
                         className={classes(Margins.top16, Margins.bottom16)}
                         style={{ padding: "1em" }}
                     >
-                        <Forms.FormTitle>Notice</Forms.FormTitle>
-                        <Forms.FormText>Activity Sharing isn't enabled, people won't be able to see your custom rich presence!</Forms.FormText>
-
+                        <SectionHeader tag="h5" title="Notice" description="Activity Sharing isn't enabled, people won't be able to see your custom rich presence!" />
                         <div className={Margins.top8}>
                             <Buttons.Button
                                 text="Enable"
@@ -253,23 +253,23 @@ export default definePlugin({
                     </ErrorCard>
                 )}
 
-                <Flex flexDirection="column" style={{ gap: ".5em" }} className={Margins.top16}>
-                    <Forms.FormText>
+                <Flex flexDirection="column" gap=".5em" className={Margins.top16}>
+                    <Paragraph>
                         Go to the <Link href="https://discord.com/developers/applications">Discord Developer Portal</Link> to create an application and
                         get the application ID.
-                    </Forms.FormText>
-                    <Forms.FormText>
+                    </Paragraph>
+                    <Paragraph>
                         Upload images in the Rich Presence tab to get the image keys.
-                    </Forms.FormText>
-                    <Forms.FormText>
+                    </Paragraph>
+                    <Paragraph>
                         If you want to use an image link, download your image and reupload the image to <Link href="https://imgur.com">Imgur</Link> and get the image link by right-clicking the image and selecting "Copy image address".
-                    </Forms.FormText>
-                    <Forms.FormText>
+                    </Paragraph>
+                    <Paragraph>
                         You can't see your own buttons on your profile, but everyone else can see it fine.
-                    </Forms.FormText>
-                    <Forms.FormText>
+                    </Paragraph>
+                    <Paragraph>
                         Some weird unicode text ("fonts" 𝖑𝖎𝖐𝖊 𝖙𝖍𝖎𝖘) may cause the rich presence to not show up, try using normal letters instead.
-                    </Forms.FormText>
+                    </Paragraph>
                 </Flex>
 
                 <Forms.FormDivider className={Margins.top8} />

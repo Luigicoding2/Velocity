@@ -25,7 +25,7 @@ import definePlugin, { OptionType, PluginNative } from "@utils/types";
 import { findComponentByCodeLazy, findCssClassesLazy } from "@webpack";
 import { ApplicationStreamingStore, Popout, useEffect, useRef, UserStore, useStateFromStores } from "@webpack/common";
 
-import { contextMenus, CrasherContextMenu } from "./menu";
+import { CrasherContextMenu, StreamCrasherPatch } from "./menu";
 import { setCrashMode, setLastSourceId, updateStream } from "./utils";
 
 export const crashModeLabels: Record<string, { value: string; subText?: string; }> = {
@@ -187,7 +187,9 @@ export default definePlugin({
     authors: [Devs.RoScripter999],
     settings,
 
-    contextMenus,
+    contextMenus: {
+        "manage-streams": StreamCrasherPatch
+    },
 
     start() {
         window.addEventListener("keydown", this.event);

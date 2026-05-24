@@ -20,6 +20,8 @@ import { Settings } from "@api/Settings";
 import { ErrorCard } from "@components/ErrorBoundary";
 import { Link } from "@components/Link";
 import { Margins } from "@components/margins";
+import { Paragraph } from "@components/Paragraph";
+import { SectionHeader } from "@components/settings";
 import { CspBlockedUrls, useCspErrors } from "@utils/cspViolations";
 import { getIntlMessage } from "@utils/discord";
 import { classes } from "@utils/misc";
@@ -80,12 +82,19 @@ export function CspErrorCard() {
     };
     return (
         <ErrorCard className="vc-settings-card">
-            <Forms.FormTitle tag="h5">Blocked Resources</Forms.FormTitle>
-            <Forms.FormText>Some images, styles, or fonts were blocked because they come from disallowed domains.</Forms.FormText>
-            <Forms.FormText>It is highly recommended to move them to GitHub or Imgur. But you may also allow domains if you fully trust them.</Forms.FormText>
-            <Forms.FormText>
-                After allowing a domain, you have to fully close (from tray / task manager) and restart Discord to apply the change.
-            </Forms.FormText>
+            <SectionHeader
+                tag="h5"
+                title="Blocked Resources"
+                description={(
+                    <>
+                        Some images, styles, or fonts were blocked because they come from disallowed domains.
+                        <br /><br />
+                        It is highly recommended to move them to GitHub or Imgur. But you may also allow domains if you fully trust them.
+                        <br /><br />
+                        After allowing a domain, you have to fully close (from tray / task manager) and restart Discord to apply the change.
+                    </>
+                )}
+            />
 
             <Forms.FormTitle tag="h5" className={classes(Margins.top16, Margins.bottom8)}>Blocked URLs</Forms.FormTitle>
             <div className="vc-settings-themes-csp-list">
@@ -106,10 +115,10 @@ export function CspErrorCard() {
             {hasImgurHtmlDomain && (
                 <>
                     <Forms.FormDivider className={classes(Margins.top8, Margins.bottom16)} />
-                    <Forms.FormText>
+                    <Paragraph>
                         Imgur links should be direct links in the form of <code>https://i.imgur.com/...</code>
-                    </Forms.FormText>
-                    <Forms.FormText>To obtain a direct link, right-click the image and select "Copy image address".</Forms.FormText>
+                    </Paragraph>
+                    <Paragraph>To obtain a direct link, right-click the image and select "Copy image address".</Paragraph>
                 </>
             )}
         </ErrorCard>

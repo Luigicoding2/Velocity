@@ -18,6 +18,7 @@
 
 import { addMessagePreEditListener, addMessagePreSendListener, removeMessagePreEditListener, removeMessagePreSendListener } from "@api/MessageEvents";
 import { definePluginSettings } from "@api/Settings";
+import { Paragraph } from "@components/Paragraph";
 import { ApngBlendOp, ApngDisposeOp, parseAPNG } from "@utils/apng";
 import { Devs } from "@utils/constants";
 import { getCurrentGuild } from "@utils/discord";
@@ -25,8 +26,8 @@ import { Logger } from "@utils/Logger";
 import definePlugin, { OptionType } from "@utils/types";
 import type { Emoji, Message, ModalPropsRender, Sticker } from "@velocity-types";
 import { StickerFormatType } from "@velocity-types/enums";
-import { findByCodeLazy, findByPropsLazy, proxyLazyWebpack } from "@webpack";
-import { ChannelStore, ConfirmModal, DraftType, EmojiStore, FluxDispatcher, Forms, GuildMemberStore, IconUtils, lodash, openModal, Parser, PermissionsBits, PermissionStore, StickersStore, UploadHandler, UserSettingsActionCreators, UserSettingsProtoStore, UserStore } from "@webpack/common";
+import { findByCodeLazy, findByPropsLazy, findLazy, proxyLazyWebpack } from "@webpack";
+import { ChannelStore, ConfirmModal, DraftType, EmojiStore, FluxDispatcher, GuildMemberStore, IconUtils, lodash, openModal, Parser, PermissionsBits, PermissionStore, StickersStore, UploadHandler, UserSettingsProtoStore, UserStore } from "@webpack/common";
 import { applyPalette, GIFEncoder, quantize } from "gifenc";
 import type { ReactElement, ReactNode } from "react";
 
@@ -40,7 +41,7 @@ function searchProtoClassField(localName: string, protoClass: any) {
     return fieldGetter?.();
 }
 
-const PreloadedUserSettingsActionCreators = proxyLazyWebpack(() => UserSettingsActionCreators.PreloadedUserSettingsActionCreators);
+const PreloadedUserSettingsActionCreators = proxyLazyWebpack(() => findLazy(m => m.ProtoClass?.typeName?.endsWith(".PreloadedUserSettings")));
 const AppearanceSettingsActionCreators = proxyLazyWebpack(() => searchProtoClassField("appearance", PreloadedUserSettingsActionCreators.ProtoClass));
 const ClientThemeSettingsActionsCreators = proxyLazyWebpack(() => searchProtoClassField("clientThemeSettings", AppearanceSettingsActionCreators));
 
@@ -857,10 +858,10 @@ export default definePlugin({
                                 variant="primary"
                             >
                                 <div>
-                                    <Forms.FormText>
+                                    <Paragraph>
                                         You cannot send this message because it contains an animated FakeNitro sticker,
                                         and you do not have permissions to attach files in the current channel. Please remove the sticker to proceed.
-                                    </Forms.FormText>
+                                    </Paragraph>
                                 </div>
                             </ConfirmModal>
                         ));

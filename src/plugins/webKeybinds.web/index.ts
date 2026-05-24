@@ -21,7 +21,7 @@ import definePlugin from "@utils/types";
 import { findByPropsLazy } from "@webpack";
 import { ComponentDispatch, FluxDispatcher, NavigationRouter, SelectedGuildStore, SettingsRouter } from "@webpack/common";
 
-const KeyBinds = findByPropsLazy("JUMP_TO_GUILD", "SERVER_NEXT");
+const KeyBinds = findByPropsLazy("JUMP_TO_GUILD", "SERVER_NEXT", "CALL_START");
 
 export default definePlugin({
     name: "WebKeybinds",
@@ -54,7 +54,7 @@ export default definePlugin({
                 break;
             case ",":
                 e.preventDefault();
-                SettingsRouter.openUserSettings("my_account_panel");
+                SettingsRouter.openUserSettings("account_panel");
                 break;
             default:
                 if (e.key >= "1" && e.key <= "9") {

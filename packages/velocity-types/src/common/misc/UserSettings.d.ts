@@ -67,8 +67,9 @@ export interface SidebarItemNode extends LayoutBuilderNode {
     useTitle(): ReactNode | string;
     buildLayout(): PanelNode[];
     usePredicate?(): boolean;
-    icon(): ReactNode;
-    /** @override When used, {@link useTitle} and {@link icon} Disappear, rendering a custom component. */
+    icon: ReactNode | ComponentType;
+    onClick?(): void;
+    /** @override When used, {@link useTitle} and {@link icon} Disappear, rendering a custom component. Discord uses this at the hoisted button. */
     StronglyDiscouragedCustomComponent?(): ReactNode;
     /** Color of the button. @default "default" */
     variant?: "default" | "destructive";
@@ -151,7 +152,7 @@ export interface FieldSetNode extends LayoutNode {
 
 /**
  * Nodes are rendered in the {@link layout} and **MUST** use "layout", NOT buildLayout.
- * If {@link TabItemNode} is rendered within a {@link CategoryNode} It would cause the 10 nodes error
+ * If {@link TabItemNode} is rendered within a {@link CategoryNode} It would cause the {@link type 10} nodes error
  */
 export interface TabItemNode extends LayoutNode {
     type: LayoutType.TAB_ITEM;

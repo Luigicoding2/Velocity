@@ -381,11 +381,16 @@ function UserscriptThemesTab() {
     return (
         <SettingsTab>
             <Card className="vc-settings-card">
-                <Forms.FormTitle tag="h5">Themes are not supported on the Userscript!</Forms.FormTitle>
-
-                <Forms.FormText>
-                    You can instead install themes with the <Link href={getStylusWebStoreUrl()}>Stylus extension</Link>!
-                </Forms.FormText>
+                <SectionHeader
+                    tag="h5"
+                    title="Themes are not supported on the Userscript!"
+                    description={(
+                        <>
+                            You can instead install themes with the{" "}
+                            <Link href={getStylusWebStoreUrl()}>Stylus extension</Link>!
+                        </>
+                    )}
+                />
             </Card>
         </SettingsTab>
     );

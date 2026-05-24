@@ -18,12 +18,13 @@
 
 import { definePluginSettings } from "@api/Settings";
 import { Link } from "@components/Link";
+import { SectionHeader } from "@components/settings";
 import { Devs } from "@utils/constants";
 import { Logger } from "@utils/Logger";
 import definePlugin, { OptionType } from "@utils/types";
 import type { Activity, ActivityAssets, ActivityButton } from "@velocity-types";
 import { ActivityFlags, ActivityStatusDisplayType, ActivityType } from "@velocity-types/enums";
-import { ApplicationAssetUtils, FluxDispatcher, Forms, SelfPresenceStore } from "@webpack/common";
+import { ApplicationAssetUtils, FluxDispatcher, SelfPresenceStore } from "@webpack/common";
 
 interface TrackData {
     name: string;
@@ -178,9 +179,8 @@ export default definePlugin({
     authors: [Devs.RuiNtD, Devs.blahajZip, Devs.archeruwu],
 
     settingsAboutComponent: () => (
-        <>
-            <Forms.FormTitle tag="h3">How to get an API key</Forms.FormTitle>
-            <Forms.FormText>
+        <SectionHeader tag="h3" title="How to get an API key" description={
+            <>
                 An API key is required to fetch your current track. To get one, you can
                 visit <Link href="https://www.last.fm/api/account/create">this page</Link> and
                 fill in the following information: <br /> <br />
@@ -188,9 +188,8 @@ export default definePlugin({
                 Application name: Discord Rich Presence <br />
                 Application description: (personal use) <br /> <br />
 
-                And copy the API key (not the shared secret!)
-            </Forms.FormText>
-        </>
+                And copy the API key (not the shared secret!)</>
+        } />
     ),
 
     settings,

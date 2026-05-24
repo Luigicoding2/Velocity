@@ -165,7 +165,7 @@ export const ChannelRouter: t.ChannelRouter = mapMangledModuleLazy('"Thread must
     transitionToThread: filters.byCode('"Thread must have a parent ID."')
 });
 
-export let SettingsRouter: any;
+export let SettingsRouter: t.SettingsRouter;
 waitFor(["openUserSettings", "USER_SETTINGS_MODAL_KEY"], m => SettingsRouter = m);
 export const PermissionsBits: t.PermissionsBits = findLazy(m => typeof m.ADMINISTRATOR === "bigint");
 
@@ -186,7 +186,6 @@ export const ChannelActionCreators = findByPropsLazy("openPrivateChannel");
 export const VoiceActions = findByPropsLazy("toggleSelfMute");
 export const GuildActions = findByPropsLazy("setServerMute", "setServerDeaf");
 export const ChannelActions = findByPropsLazy("selectChannel", "selectVoiceChannel");
-export const PinActions = findByPropsLazy("pinMessage", "unpinMessage");
 
 export const IconUtils: t.IconUtils = findByPropsLazy("getGuildBannerURL", "getUserAvatarURL");
 
@@ -198,12 +197,6 @@ export const ExpressionPickerStore: t.ExpressionPickerStore = mapMangledModuleLa
     setExpressionPickerView: filters.byCode(/setState\({activeView:\i,lastActiveView:/),
     setSearchQuery: filters.byCode("searchQuery:"),
     useExpressionPickerStore: filters.byCode(/\(\i,\i=\i\)=>/)
-});
-
-export const PopoutActions: t.PopoutActions = mapMangledModuleLazy('type:"POPOUT_WINDOW_OPEN"', {
-    open: filters.byCode('type:"POPOUT_WINDOW_OPEN"'),
-    close: filters.byCode('type:"POPOUT_WINDOW_CLOSE"'),
-    setAlwaysOnTop: filters.byCode('type:"POPOUT_WINDOW_SET_ALWAYS_ON_TOP"')
 });
 
 export const UsernameUtils: t.UsernameUtils = findByPropsLazy("useName", "getGlobalName");
@@ -220,8 +213,6 @@ export const DateUtils: t.DateUtils = mapMangledModuleLazy("millisecondsInUnit:"
 });
 
 export const MessageTypeSets: t.MessageTypeSets = findByPropsLazy("REPLYABLE", "FORWARDABLE");
-
-export const fetchApplicationsRPC = findByCodeLazy('"Invalid Origin"', ".application");
 
 export const CloudUploader = findLazy(m => m.prototype?.trackUploadFinished) as typeof t.CloudUpload;
 

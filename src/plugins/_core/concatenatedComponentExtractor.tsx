@@ -18,7 +18,7 @@
 
 import { Devs } from "@utils/constants";
 import definePlugin, { StartAt } from "@utils/types";
-import { setColorPicker, setCreateScroller, setIcons } from "@webpack/common";
+import { setColorPicker, setCreateScroller, setFilePicker, setIcons } from "@webpack/common";
 
 export default definePlugin({
     name: "ConcatenatedComponentExtractor",
@@ -50,6 +50,14 @@ export default definePlugin({
                 replace: (m, exportsVar) => `${m}$self.setIcons(${exportsVar}),`
             }
         },
+        {
+            find: ".currentTarget.files?.[0])",
+            lazy: true,
+            replacement: {
+                match: /(?=function (\i)\(\i\)\{let\{filename:\i,className:\i,filters:\i,)/,
+                replace: "$self.setFilePicker($1);"
+            }
+        },
 
         {
             find: "interactiveLabel:!0,",
@@ -73,5 +81,6 @@ export default definePlugin({
 
     setCreateScroller,
     setColorPicker,
+    setFilePicker,
     setIcons
 });
