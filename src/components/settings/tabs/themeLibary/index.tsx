@@ -25,7 +25,7 @@ import { SectionHeader } from "@components/settings/tabs";
 import { SettingsTab } from "@components/settings/tabs/SectionSettings";
 import type { Dev } from "@utils/constants";
 import { classNameFactory } from "@utils/css";
-import { isReducedMotionEnabled, openImageModal } from "@utils/discord";
+import { openImageModal } from "@utils/discord";
 import { classes } from "@utils/misc";
 import { useForceUpdater } from "@utils/react";
 import { Buttons, Forms, Icons, LoadingIndicator, Menu, Paginator, Popout, SearchBar, Text, Tooltip, useEffect, useRef, useState } from "@webpack/common";
@@ -50,6 +50,14 @@ interface ThemeResult {
     tags: string[];
 }
 
+interface ThemeCardProps {
+    theme: Theme;
+    selectedTags: Set<string>;
+    onTagSelect: (tag: string) => void;
+    ownedThemes: string[];
+    onOwnershipChange: (themeName: string, owned: boolean) => void;
+}
+
 let ThemesJSON = {} as ThemeResult;
 
 let themesLoaded = false;
@@ -67,33 +75,28 @@ async function loadThemes() {
 }
 
 
-function ThemeCard({ theme, selectedTags, onTagSelect }: { theme: Theme; selectedTags: Set<string>; onTagSelect: (tag: string) => void; }) {
-    const [ownedThemes, setOwnedThemes] = useState<string[]>([]);
+function ThemeCard({ theme, selectedTags, onTagSelect, ownedThemes, onOwnershipChange }: ThemeCardProps) {
     const [loading, setLoading] = useState(false);
-
-    useEffect(() => {
-        VelocityNative.themes.getThemesList().then(themes => {
-            setOwnedThemes(themes.map(v => v.name.replace(/\.css$/, "")));
-        });
-    }, []);
 
     const isOwned = ownedThemes.includes(theme.name);
 
     const handleThemeAdded = () => {
-        setOwnedThemes(prev => [...prev, theme.name]);
+        onOwnershipChange(theme.name, true);
     };
 
     const handleDelete = async () => {
         setLoading(true);
-        await VelocityNative.themes.deleteTheme(theme.name.endsWith(".css") ? theme.name : `${theme.name}.css`);
-        Settings.themes.localThemes = JSON.parse(JSON.stringify(Settings.themes.localThemes)).filter(t => t.name !== (theme.name.endsWith(".css") ? theme.name : `${theme.name}.css`));
-        setOwnedThemes(prev => prev.filter(name => name !== theme.name));
-        setLoading(false);
+        try {
+            await VelocityNative.themes.deleteTheme(theme.name.endsWith(".css") ? theme.name : `${theme.name}.css`);
+            Settings.themes.localThemes = JSON.parse(JSON.stringify(Settings.themes.localThemes)).filter(t => t.name !== (theme.name.endsWith(".css") ? theme.name : `${theme.name}.css`));
+            onOwnershipChange(theme.name, false);
+        } finally {
+            setLoading(false);
+        }
     };
-    console.log(theme.banner);
 
     return (
-        <Card data-reduced-motion={isReducedMotionEnabled()} className={cl("card")}>
+        <Card className={cl("card")}>
             <Flex flexDirection="column" className={cl("header")}>
                 <img className={cl("banner")} src={theme.banner} onClick={() => openImageModal({
                     url: theme.banner,
@@ -148,14 +151,28 @@ export function ThemesLibTab() {
     const [currentPage, setCurrentPage] = useState(1);
     const [tagPopoutOpen, setTagPopoutOpen] = useState(false);
     const tagButtonRef = useRef<HTMLButtonElement>(null);
+    const [ownedThemes, setOwnedThemes] = useState<string[]>([]);
     const [filters, setFilters] = useState({
         tags: new Set<string>(),
-        search: String()
+        search: ""
     });
 
     useEffect(() => {
         loadThemes().then(() => forceUpdate());
-    }, [forceUpdate]);
+    }, []);
+
+    useEffect(() => {
+        VelocityNative.themes.getThemesList().then(themes => {
+            setOwnedThemes(themes.map(v => v.name.replace(/\.css$/, "")));
+        });
+    }, []);
+
+    const handleOwnershipChange = (themeName: string, owned: boolean) => {
+        setOwnedThemes(prev => owned
+            ? [...prev, themeName]
+            : prev.filter(name => name !== themeName)
+        );
+    };
 
     const itemsPerPage = 10;
     const themesList = ThemesJSON.themes ? Object.values(ThemesJSON.themes) : [];
@@ -193,7 +210,7 @@ export function ThemesLibTab() {
                     <SearchBar
                         query={filters.search}
                         onChange={query => setFilters(prev => ({ ...prev, search: query }))}
-                        onClear={() => setFilters(prev => ({ ...prev, search: String() }))}
+                        onClear={() => setFilters(prev => ({ ...prev, search: "" }))}
                         placeholder="Search themes..."
                         size="sm"
                     />
@@ -250,6 +267,8 @@ export function ThemesLibTab() {
                                 theme={theme}
                                 selectedTags={filters.tags}
                                 onTagSelect={handleTagSelect}
+                                ownedThemes={ownedThemes}
+                                onOwnershipChange={handleOwnershipChange}
                             />
                         ))
                         : !themesLoaded

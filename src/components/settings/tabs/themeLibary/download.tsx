@@ -79,14 +79,18 @@ function ThemeModal(props: ThemeModalProps & { onThemeAdded?: () => void; }) {
 
     const handleUpload = async () => {
         setLoading(true);
-        await VelocityNative.themes.uploadTheme(theme.name.endsWith(".css") ? theme.name : `${theme.name}.css`, theme.themeCode);
-        Settings.themes.localThemes = [
-            ...JSON.parse(JSON.stringify(Settings.themes.localThemes)).filter(t => t.name !== theme.name),
-            { name: theme.name.endsWith(".css") ? theme.name : `${theme.name}.css`, themeActivationModes: "always", enabled: true }
-        ];
-        onThemeAdded?.();
-        onClose();
-        setLoading(false);
+        try {
+            await VelocityNative.themes.uploadTheme(theme.name.endsWith(".css") ? theme.name : `${theme.name}.css`, theme.themeCode);
+            Settings.themes.localThemes = [
+                ...JSON.parse(JSON.stringify(Settings.themes.localThemes)).filter((t: Theme) => t.name !== theme.name),
+                { name: theme.name.endsWith(".css") ? theme.name : `${theme.name}.css`, themeActivationModes: "always", enabled: true }
+            ];
+            onThemeAdded?.();
+            setLoading(false);
+            onClose();
+        } catch {
+            setLoading(false);
+        }
     };
 
     return (
