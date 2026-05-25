@@ -10,6 +10,8 @@ Contributions can be sent via pull requests. If you're new to Git, check [this g
 
 Pull requests can be made either to the `main` or the `dev` branch. However, unless you're an advanced user, I recommend sticking to `main`. This is because the dev branch might contain unstable changes and be force pushed frequently, which could cause conflicts in your pull request.
 
+We recommend you to link your Github account using the /github command from Vebot's slash commands from our [community server](https://discord.gg/QvYQ4jCQBw) to manage your rewards quicker and other related requests.
+
 ## Write a plugin
 
 Writing a plugin is the primary way to contribute.
