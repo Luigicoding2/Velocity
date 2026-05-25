@@ -39,8 +39,8 @@ export const CspPolicies: PolicyMap = {
     "*.github.io": ImageAndCssSrc, // GitHub pages, used by most themes
     "gist.githubusercontent.com": ConnectSrc, // GitHub gist content
     "github.com": ImageAndCssSrc, // GitHub content (stuff uploaded to markdown forms), used by most themes
+    "avatars.githubusercontent.com": ImageAndCssSrc, // GitHub content (stuff uploaded to markdown forms), used by most themes
     "github.com/user-attachments/assets/*": ImageSrc, // GitHub assets used by built-in themes
-    "objects.githubusercontent.com": ImageSrc, // GitHub user-attachment CDN (redirect target of github.com/user-attachments)
     "*.s3.amazonaws.com": ImageSrc, // AWS S3 (redirect target of github.com/user-attachments for some assets)
     "raw.githubusercontent.com": ImageAndCssSrc, // GitHub raw, used by some themes
     "*.gitlab.io": ImageAndCssSrc, // GitLab pages, used by some themes

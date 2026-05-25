@@ -136,7 +136,7 @@ function ThemeModal(props: ThemeModalProps & { onThemeAdded?: () => void; }) {
                             icon={Icons.UserIcon}
                             content={theme.author.name}
                             tooltip="Author"
-                            action={() => openUserProfile(String(theme.author.id))}
+                            action={Number(theme.author.id) !== 0 ? () => openUserProfile(String(theme.author.id)) : undefined}
                         />
                         {theme.invite && (
                             <Row

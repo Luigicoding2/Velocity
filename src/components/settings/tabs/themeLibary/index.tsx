@@ -25,7 +25,7 @@ import { SectionHeader } from "@components/settings/tabs";
 import { SettingsTab } from "@components/settings/tabs/SectionSettings";
 import type { Dev } from "@utils/constants";
 import { classNameFactory } from "@utils/css";
-import { isReducedMotionEnabled } from "@utils/discord";
+import { isReducedMotionEnabled, openImageModal } from "@utils/discord";
 import { classes } from "@utils/misc";
 import { useForceUpdater } from "@utils/react";
 import { Buttons, Forms, Icons, LoadingIndicator, Menu, Paginator, Popout, SearchBar, Text, Tooltip, useEffect, useRef, useState } from "@webpack/common";
@@ -90,11 +90,16 @@ function ThemeCard({ theme, selectedTags, onTagSelect }: { theme: Theme; selecte
         setOwnedThemes(prev => prev.filter(name => name !== theme.name));
         setLoading(false);
     };
+    console.log(theme.banner);
 
     return (
         <Card data-reduced-motion={isReducedMotionEnabled()} className={cl("card")}>
             <Flex flexDirection="column" className={cl("header")}>
-                <img className={cl("banner")} src={theme.banner} />
+                <img className={cl("banner")} src={theme.banner} onClick={() => openImageModal({
+                    url: theme.banner,
+                    height: 1680,
+                    width: 1680
+                })} />
                 <div className={cl("icon-wrapper")}>
                     <Tooltip hideOnClick={false} text={theme.author.name}>
                         {tooltipProps => (
@@ -103,7 +108,7 @@ function ThemeCard({ theme, selectedTags, onTagSelect }: { theme: Theme; selecte
                     </Tooltip>
                 </div>
             </Flex>
-            <Flex flexDirection="column" className={cl("content")}>
+            <div className={cl("content")}>
                 <SectionHeader tag="h6" titleVariant="text-md/semibold" title={theme.name} description={theme.description} />
                 {theme?.tags && theme.tags.length > 0 && (
                     <Flex gap="8px" flexWrap="wrap">
@@ -133,7 +138,7 @@ function ThemeCard({ theme, selectedTags, onTagSelect }: { theme: Theme; selecte
                         }
                     }}
                 />
-            </Flex>
+            </div>
         </Card>
     );
 }
