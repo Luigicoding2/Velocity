@@ -19,8 +19,7 @@
 import type { MessageObject } from "@api/MessageEvents";
 import type { Channel, CloudUpload, Guild, GuildFeatures, IntlKeys, MediaModalItem, MediaModalProps, Message, User } from "@velocity-types";
 import { Theme } from "@velocity-types/enums";
-import { findStoreLazy } from "@webpack";
-import { ChannelActionCreators, ChannelStore, ComponentDispatch, Constants, FluxDispatcher, GuildStore, i18n, IconUtils, InviteActions, MessageActions, openMediaModal, RestAPI, SelectedChannelStore, SelectedGuildStore, SettingsActionCreators, Toasts, UserProfileActions, UserProfileStore, UserUtils } from "@webpack/common";
+import { AccessibilityStore, ChannelActionCreators, ChannelStore, ComponentDispatch, Constants, FluxDispatcher, GuildStore, i18n, IconUtils, InviteActions, MessageActions, openMediaModal, RestAPI, SelectedChannelStore, SelectedGuildStore, SettingsActionCreators, Toasts, UserProfileActions, UserProfileStore, UserUtils } from "@webpack/common";
 import type { Except } from "type-fest";
 
 import { copyToClipboard } from "./clipboard";
@@ -97,9 +96,7 @@ export async function copyWithToast(text: string, toastMessage = "Copied to clip
  * Check if the user has reducedMotion and return a stateful value
  */
 export function isReducedMotionEnabled(): boolean {
-    const Store = findStoreLazy("AccessibilityStore") as typeof import("@webpack/common/stores").AccessibilityStore;
-
-    return Store.useReducedMotion;
+    return AccessibilityStore.useReducedMotion;
 }
 
 export function getCurrentChannel(): Channel | undefined {
